@@ -34,6 +34,23 @@ show_password_var = IntVar()
 show_password_checkbox = Checkbutton(frame, text="Show", variable=show_password_var, command=lambda: show_password(password_entry, show_password_var))
 show_password_checkbox.pack()
 
+def display_items(roots):
+    text_widget = Text(roots, width=100, height=20)
+    text_widget.pack(fill=BOTH,expand=True)
+    
+    conn = sqlite3.connect('favimark.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM favourites")
+    items = c.fetchall()
+    conn.close()
+    
+    # Clear the text widget
+    text_widget.delete('1.0', END)
+    
+    # Display the database items
+    for item in items:
+        text_widget.insert(END, f"Name: {item[0]}\nType: {item[1]}\nDescription: {item[2]}\n\n")
+
 def login():
     if username_entry.get() == 'favimarko' and password_entry.get() == 'qwerty':
         roots = Toplevel(root)
@@ -67,6 +84,8 @@ def login():
 
         search_button = Button(search_frame, text=" SEARCH ", font=('Arial', 12), bg='grey', fg='white')
         search_button.pack(side=LEFT, padx=10)
+        
+        display_items(roots)
 
     else:
         messagebox.showerror('Warning', 'Invalid username or password')
@@ -90,6 +109,7 @@ def add_item():
     newe3.pack()
     addnew=Button(additem,text=" ADD ",command=create, bg='grey', fg='white')
     addnew.pack()
+    display_items()
     
 def create():
     conn=sqlite3.connect('favimark.db')
@@ -105,6 +125,7 @@ def create():
     
     # Insert new item into the table
     c.execute('INSERT INTO favourites VALUES(?,?,?)',(newe1.get('1.0', END), newe2.get('1.0', END), newe3.get('1.0', END)))
+    #newe1.get('1.0',END)-> newe1 is an text entry method, indexing required to retrieve values....!!!!!
     conn.commit()
     conn.close()
     
@@ -112,11 +133,14 @@ def create():
     newe1.delete('1.0',END)
     newe2.delete('1.0',END)
     newe3.delete('1.0',END)
+    display_items()
     
 def edit_item():
     print("edititems")
+    display_items()
 def delete_item():
     print("deleteitems")
+    display_items()
 def search_item():
     print("searchitems")
 
