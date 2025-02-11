@@ -71,7 +71,7 @@ def login():
         add_button = Button(button_frame, text="ADD", command=add_item, font=('Arial', 12), bg='grey', fg='white')
         add_button.pack(side=LEFT, padx=10)
 
-        edit_button = Button(button_frame, text="EDIT", command=edit_item, font=('Arial', 12), bg='grey', fg='white')
+        edit_button = Button(button_frame, text="EDIT", command=edit_prompt, font=('Arial', 12), bg='grey', fg='white')
         edit_button.pack(side=LEFT, padx=10)
 
         delete_button = Button(button_frame, text="DELETE", command=delete_item, font=('Arial', 12), bg='grey', fg='white')
@@ -139,9 +139,19 @@ def create():
     newe2.delete('1.0',END)
     newe3.delete('1.0',END)
     display_items()
+   
+def edit_prompt():
+    edit_prompt_window = Toplevel()
+    edit_prompt_window.title('Edit Prompt')
+    edit_prompt_window.geometry('350x350')
+    edit_text=Label(edit_prompt_window,text="Enter the ID of the records you want to edit.")
+    edit_text.pack(pady=50)
+    edite1=Entry(edit_prompt_window)
+    edite1.pack()
+    edit=Button(edit_prompt_window,text="PROCEED TO EDIT",command=edit_item)
+    edit.pack(pady=10)
     
 def edit_item():
-    print("edititems")
     display_items()
 def delete_item():
     print("deleteitems")
