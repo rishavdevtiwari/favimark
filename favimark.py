@@ -49,13 +49,13 @@ def login():
         button_frame.pack(side=LEFT)
 
         # Create the buttons
-        add_button = Button(button_frame, text="ADD", command=lambda: add_item(roots), font=('Arial', 12), bg='grey', fg='white')
+        add_button = Button(button_frame, text="ADD", command=add_item, font=('Arial', 12), bg='grey', fg='white')
         add_button.pack(side=LEFT, padx=10)
 
-        edit_button = Button(button_frame, text="EDIT", command=lambda: edit_item(roots), font=('Arial', 12), bg='grey', fg='white')
+        edit_button = Button(button_frame, text="EDIT", command=edit_item, font=('Arial', 12), bg='grey', fg='white')
         edit_button.pack(side=LEFT, padx=10)
 
-        delete_button = Button(button_frame, text="DELETE", command=lambda: delete_item(roots), font=('Arial', 12), bg='grey', fg='white')
+        delete_button = Button(button_frame, text="DELETE", command=delete_item, font=('Arial', 12), bg='grey', fg='white')
         delete_button.pack(side=LEFT, padx=10)
 
         # Create a frame to hold the entry box and search button
@@ -71,7 +71,7 @@ def login():
     else:
         messagebox.showerror('Warning', 'Invalid username or password')
         
-def add_item(roots):
+def add_item():
     global newe1, newe2, newe3, additem
     additem = Toplevel()
     additem.geometry('400x400')
@@ -88,15 +88,36 @@ def add_item(roots):
     desc_label.pack()
     newe3=Text(additem,height=10,width=40)
     newe3.pack()
-    addnew=Button(additem,text=" ADD ",command=add_item, bg='grey', fg='white')
+    addnew=Button(additem,text=" ADD ",command=create, bg='grey', fg='white')
     addnew.pack()
+    
 def create():
-    print("createitems")
-def edit_item(roots):
+    conn=sqlite3.connect('favimark.db')
+    c=conn.cursor()
+    
+    # Create table if it doesn't exist
+    c.execute(
+        '''CREATE TABLE IF NOT EXISTS favourites(
+            fav_name text,
+            fav_type text,
+            fav_description text)'''
+    )
+    
+    # Insert new item into the table
+    c.execute('INSERT INTO favourites VALUES(?,?,?)',(newe1.get('1.0', END), newe2.get('1.0', END), newe3.get('1.0', END)))
+    conn.commit()
+    conn.close()
+    
+    # Clear the text boxes #->indexing starts from 1 in text boxes
+    newe1.delete('1.0',END)
+    newe2.delete('1.0',END)
+    newe3.delete('1.0',END)
+    
+def edit_item():
     print("edititems")
-def delete_item(roots):
+def delete_item():
     print("deleteitems")
-def search_item(roots):
+def search_item():
     print("searchitems")
 
 def show_password(entry, var):
