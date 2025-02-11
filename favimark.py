@@ -34,22 +34,24 @@ show_password_var = IntVar()
 show_password_checkbox = Checkbutton(frame, text="Show", variable=show_password_var, command=lambda: show_password(password_entry, show_password_var))
 show_password_checkbox.pack()
 
-def display_items(roots):
-    text_widget = Text(roots, width=100, height=20)
-    text_widget.pack(fill=BOTH,expand=True)
-    
+def display_items(roots,lbl):
+    item_frame = Frame(roots)
+    item_frame.pack(fill=BOTH, expand=True)
     conn = sqlite3.connect('favimark.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM favourites")
+    c.execute("SELECT *, oid FROM favourites")
     items = c.fetchall()
     conn.close()
     
-    # Clear the text widget
-    text_widget.delete('1.0', END)
-    
-    # Display the database items
-    for item in items:
-        text_widget.insert(END, f"Name: {item[0]}\nType: {item[1]}\nDescription: {item[2]}\n\n")
+    text_widget = Text(roots, width=100, height=50)
+    text_widget.pack(fill=BOTH,expand=True)
+    for i, item in enumerate(items, start=1):
+        item_id = item[3]
+        item_name = item[0]
+        item_type = item[1]
+        item_description = item[2]
+
+        text_widget.insert(END, f"{i}. Name: {item_name}\n---Type: {item_type}\n---Description: {item_description}\n")
 
 def login():
     if username_entry.get() == 'favimarko' and password_entry.get() == 'qwerty':
@@ -59,7 +61,7 @@ def login():
 
         # Create a frame to hold the buttons and entry box
         top_frame = Frame(roots, bg='white')
-        top_frame.pack(side=TOP, fill=X, padx=10, pady=10)
+        top_frame.pack(side=TOP, fill=BOTH, padx=1, pady=10,expand=TRUE)
 
         # Create a frame to hold the buttons
         button_frame = Frame(top_frame, bg='white')
@@ -85,7 +87,10 @@ def login():
         search_button = Button(search_frame, text=" SEARCH ", font=('Arial', 12), bg='grey', fg='white')
         search_button.pack(side=LEFT, padx=10)
         
-        display_items(roots)
+        lbl=Label(text='')
+        lbl.pack()
+        
+        display_items(roots,lbl)
 
     else:
         messagebox.showerror('Warning', 'Invalid username or password')
