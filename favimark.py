@@ -1,5 +1,6 @@
 from tkinter import*
 from tkinter import messagebox
+import sqlite3
 
 #login window, initial window visible to the user
 root=Tk()
@@ -71,7 +72,24 @@ def login():
         messagebox.showerror('Warning', 'Invalid username or password')
         
 def add_item(roots):
-    print("additems")
+    global newe1, newe2, newe3, additem
+    additem = Toplevel()
+    additem.geometry('400x400')
+    additem.title("favimark/ADD-ITEMS")
+    name_label=Label(additem,text="Mark your favourites",)
+    name_label.pack()
+    newe1=Text(additem,height=1,width=40)
+    newe1.pack()
+    type_label=Label(additem,text="Type (Book/Movie/Anime/Manga/Manhua/Shows)")
+    type_label.pack()
+    newe2=Text(additem,height=1,width=40)
+    newe2.pack()
+    desc_label=Label(additem,text="Descripton/Review")
+    desc_label.pack()
+    newe3=Text(additem,height=10,width=40)
+    newe3.pack()
+    addnew=Button(additem,text=" ADD ",command=add_item, bg='grey', fg='white')
+    addnew.pack()
 def create():
     print("createitems")
 def edit_item(roots):
