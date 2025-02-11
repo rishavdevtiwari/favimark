@@ -139,8 +139,10 @@ def create():
     newe2.delete('1.0',END)
     newe3.delete('1.0',END)
     display_items()
+    additem.destroy()
    
 def edit_prompt():
+    global edit_prompt_window,edite1
     edit_prompt_window = Toplevel()
     edit_prompt_window.title('Edit Prompt')
     edit_prompt_window.geometry('350x350')
@@ -152,7 +154,68 @@ def edit_prompt():
     edit.pack(pady=10)
     
 def edit_item():
+    global neweditse1,neweditse2,neweditse3,edite1,edit_prompt_window,edit_window
+    edit_window=Toplevel()
+    edit_window.title('favimark/EDIT_ITEMS')
+    edit_window.geometry('300x300')
+    name_label=Label(edit_window,text="Edit your marked favourites",)
+    name_label.pack()
+    neweditse1=Text(edit_window,height=1,width=40)
+    neweditse1.pack()
+    type_label=Label(edit_window,text="Edit the Type (Book/Movie/Anime/Manga/Manhua/Shows)")
+    type_label.pack()
+    neweditse2=Text(edit_window,height=1,width=40)
+    neweditse2.pack()
+    desc_label=Label(edit_window,text="Edit Descripton/Review")
+    desc_label.pack()
+    neweditse3=Text(edit_window,height=10,width=40)
+    neweditse3.pack()
+    edit_add=Button(edit_window,text=" SAVE ",command=update, bg='grey', fg='white')
+    edit_add.pack(pady=10)
+    
+    try:
+        conn = sqlite3.connect('favimark.db')
+        c = conn.cursor()
+        oid=edite1.get()
+        c.execute('SELECT * FROM favourites WHERE oid=?',(oid,))
+        result = c.fetchall()
+        if result:
+            for i in result:
+                neweditse1.insert(1.0, i[0])
+                neweditse2.insert(1.0, i[1])
+                neweditse3.insert(1.0, i[2])
+        else:
+            messagebox.showerror('Error', 'OID not found in database')
+    except sqlite3.Error as e:
+        messagebox.showerror('Error', e)
+    finally:
+        if conn:
+            conn.close()
+    
+def update():
+    global neweditse1,neweditse2,neweditse3,edite1
+    conn=sqlite3.connect('favimark.db')
+    c=conn.cursor()
+    c.execute(
+        """UPDATE favourites SET
+        fav_name = :a,
+        fav_type = :b,
+        fav_description= :c,
+        WHERE oid= :oid
+        """,
+        {
+            "a":neweditse1.get('1.0','end-1c'), #exclude \n using end-1c and not END
+            "b":neweditse2.get('1.0','end-1c'),
+            "c":neweditse3.get('1.0','end-1c'),
+            "oid":edite1.get(),
+        },
+    )
+    conn.commit()
+    conn.close()
+    edite1.delete(0,END)
+    edit_window.destroy()
     display_items()
+    
 def delete_item():
     print("deleteitems")
     display_items()
