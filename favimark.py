@@ -5,7 +5,7 @@ import sqlite3
 #login window, initial window visible to the user
 root=Tk()
 root.title("favimark/login") #title
-root.state('zoomed')  # This will make the window fullscreen
+root.geometry('700x700')  # authentication section
 root.iconbitmap('login.ico') #icon of window
 root.resizable(0,0) #non-resizable
 
@@ -36,15 +36,17 @@ show_password_checkbox.pack()
 
 def login(): #this contains a separate window after user authentication
     if username_entry.get() == 'favimarko' and password_entry.get() == 'qwerty':
+        root.iconify() #minimize root window
         dashboard() #dashboard opens a new windw if user authenticated 
-    
+        username_entry.delete(0,END)
+        password_entry.delete(0,END)
     else:
         messagebox.showerror('Warning', 'Invalid username or password')
         
 def dashboard():
         global roots
         roots = Toplevel(root)
-        roots.state('zoomed')
+        roots.state('zoomed') # this will make it fullscreen
         roots.title("favimark/Dashboard")
 
         # aligns everything at the top of the page
@@ -223,6 +225,7 @@ def update():
     conn.close()
     edite1.delete(0,END)
     edit_window.destroy()
+    edit_prompt_window.destroy()
     display_items(roots)
 
 def delete_prompt():
