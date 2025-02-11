@@ -5,7 +5,7 @@ import sqlite3
 #login window, initial window visible to the user
 root=Tk()
 root.title("favimark/login") #title
-root.geometry('700x700') #size
+root.state('zoomed')  # This will make the window fullscreen
 root.iconbitmap('login.ico') #icon of window
 root.resizable(0,0) #non-resizable
 
@@ -13,7 +13,7 @@ root.resizable(0,0) #non-resizable
 frame = Frame(root, bg='white', highlightbackground='black', highlightthickness=1)
 frame.place(relx=0.5, rely=0.5, anchor='center', relwidth=0.6, relheight=0.6)
 
-#Title included on the top
+#Title included on the top and centered
 title_label = Label(frame, text="LOG IN/SIGN IN", font=('Arial', 18), bg='white')
 title_label.pack(pady=60)
 
@@ -34,51 +34,39 @@ show_password_var = IntVar()
 show_password_checkbox = Checkbutton(frame, text="Show", variable=show_password_var, command=lambda: show_password(password_entry, show_password_var))
 show_password_checkbox.pack()
 
-def display_items(roots,lbl):
-    item_frame = Frame(roots)
-    item_frame.pack(fill=BOTH, expand=True)
-    conn = sqlite3.connect('favimark.db')
-    c = conn.cursor()
-    c.execute("SELECT *, oid FROM favourites")
-    items = c.fetchall()
-    conn.close()
-    
-    text_widget = Text(roots, width=100, height=50)
-    text_widget.pack(fill=BOTH,expand=True)
-    for i, item in enumerate(items, start=1):
-        item_id = item[3]
-        item_name = item[0]
-        item_type = item[1]
-        item_description = item[2]
-
-        text_widget.insert(END, f"{i}. Name: {item_name}\n---Type: {item_type}\n---Description: {item_description}\n")
-
-def login():
+def login(): #this contains a separate window after user authentication
     if username_entry.get() == 'favimarko' and password_entry.get() == 'qwerty':
+        dashboard() #dashboard opens a new windw if user authenticated 
+    
+    else:
+        messagebox.showerror('Warning', 'Invalid username or password')
+        
+def dashboard():
+        global roots
         roots = Toplevel(root)
-        roots.geometry('800x600')
+        roots.state('zoomed')
         roots.title("favimark/Dashboard")
 
-        # Create a frame to hold the buttons and entry box
+        # aligns everything at the top of the page
         top_frame = Frame(roots, bg='white')
         top_frame.pack(side=TOP, fill=BOTH, padx=1, pady=10,expand=TRUE)
 
-        # Create a frame to hold the buttons
+        # UI for buttons 
         button_frame = Frame(top_frame, bg='white')
         button_frame.pack(side=LEFT)
 
-        # Create the buttons
+        # Buttons
         add_button = Button(button_frame, text="ADD", command=add_item, font=('Arial', 12), bg='grey', fg='white')
         add_button.pack(side=LEFT, padx=10)
 
         edit_button = Button(button_frame, text="EDIT", command=edit_prompt, font=('Arial', 12), bg='grey', fg='white')
         edit_button.pack(side=LEFT, padx=10)
 
-        delete_button = Button(button_frame, text="DELETE", command=delete_item, font=('Arial', 12), bg='grey', fg='white')
+        delete_button = Button(button_frame, text="DELETE", command=delete_prompt, font=('Arial', 12), bg='grey', fg='white')
         delete_button.pack(side=LEFT, padx=10)
 
-        # Create a frame to hold the entry box and search button
-        search_frame = Frame(top_frame, bg='white')
+        # search section
+        search_frame = Frame(top_frame, bg='white') #keeps the search items aligned on the top right
         search_frame.pack(side=RIGHT)
 
         search_entry = Entry(search_frame, font=('Arial', 12))
@@ -87,14 +75,32 @@ def login():
         search_button = Button(search_frame, text=" SEARCH ", font=('Arial', 12), bg='grey', fg='white')
         search_button.pack(side=LEFT, padx=10)
         
-        lbl=Label(text='')
-        lbl.pack()
-        
-        display_items(roots,lbl)
+        display_items(roots)
 
+def display_items(roots):
+    global text_widget
+    if 'text_widget' not in globals():
+        item_frame = Frame(roots)
+        item_frame.pack(fill=BOTH, expand=True)
+        text_widget = Text(item_frame, width=100, height=50)
+        text_widget.pack(fill=BOTH, expand=True)
     else:
-        messagebox.showerror('Warning', 'Invalid username or password')
-        
+        text_widget.delete('1.0', END)
+
+    conn = sqlite3.connect('favimark.db')
+    c = conn.cursor()
+    c.execute("SELECT *, oid FROM favourites")
+    items = c.fetchall()
+    conn.close()
+
+    for i, item in enumerate(items, start=1):
+        item_id = item[3]
+        item_name = item[0]
+        item_type = item[1]
+        item_description = item[2]
+
+        text_widget.insert(END, f"{i}. Name: {item_name}\n\n---Type: {item_type}\n\n---Description: {item_description}\n\n")
+
 def add_item():
     global newe1, newe2, newe3, additem
     additem = Toplevel()
@@ -112,11 +118,10 @@ def add_item():
     desc_label.pack()
     newe3=Entry(additem)
     newe3.pack()
-    addnew=Button(additem,text=" ADD ",command=create, bg='grey', fg='white')
+    addnew=Button(additem,text=" ADD ",command=lambda: create(additem), bg='grey', fg='white')
     addnew.pack()
-    display_items()
-    
-def create():
+
+def create(additem):
     conn=sqlite3.connect('favimark.db')
     c=conn.cursor()
     
@@ -130,7 +135,7 @@ def create():
     
     # Insert new item into the table
     c.execute('INSERT INTO favourites VALUES(?,?,?)',(newe1.get(), newe2.get(), newe3.get()))
-    #newe1.get('1.0',END)-> newe1 is an text entry method, indexing required to retrieve values....!!!!!
+    messagebox.showinfo('Success', 'Item created successfully')
     conn.commit()
     conn.close()
     
@@ -138,9 +143,9 @@ def create():
     newe1.delete(0,END)
     newe2.delete(0,END)
     newe3.delete(0,END)
-    display_items()
     additem.destroy()
-   
+    display_items(roots)
+
 def edit_prompt():
     global edit_prompt_window,edite1
     edit_prompt_window = Toplevel()
@@ -200,7 +205,7 @@ def update():
         """UPDATE favourites SET
         fav_name = :a,
         fav_type = :b,
-        fav_description= :c,
+        fav_description= :c
         WHERE oid= :oid
         """,
         {
@@ -210,15 +215,51 @@ def update():
             "oid":edite1.get(),
         },
     )
+    messagebox.showinfo('Success', 'Item edited successfully')
     conn.commit()
     conn.close()
     edite1.delete(0,END)
     edit_window.destroy()
-    display_items()
+    display_items(roots)
+
+def delete_prompt():
+    global delete_prompt_window,dele1
+    delete_prompt_window = Toplevel()
+    delete_prompt_window.title('Delete Prompt')
+    delete_prompt_window.geometry('350x350')
+    del_text=Label(delete_prompt_window,text="Enter the ID of the records you want to delete.")
+    del_text.pack(pady=50)
+    dele1=Entry(delete_prompt_window)
+    dele1.pack()
+    deletee=Button(delete_prompt_window,text=" DELETE ",command=delete_item)
+    deletee.pack(pady=10)
     
 def delete_item():
-    print("deleteitems")
-    display_items()
+    conn = sqlite3.connect('favimark.db')
+    c = conn.cursor()
+    oid = dele1.get()
+    try:
+        c.execute('DELETE FROM favourites WHERE oid=?', (oid,))
+        conn.commit()
+        
+        
+        # Update OID of remaining items
+        c.execute('SELECT oid FROM favourites WHERE oid>?', (oid,))
+        remaining_items = c.fetchall()
+        for item in remaining_items:
+            new_oid = item[0] - 1
+            c.execute('UPDATE favourites SET oid=? WHERE oid=?', (new_oid, item[0]))
+            conn.commit()
+        
+        
+        messagebox.showinfo('Success', 'Item deleted successfully')
+    except sqlite3.Error as e:
+        messagebox.showerror('Error', str(e))
+    finally:
+        conn.close()
+        display_items(roots)
+        delete_prompt_window.destroy()
+
 def search_item():
     print("searchitems")
 
@@ -238,4 +279,3 @@ login_button.pack(pady=20)
 #login button placed at last cuz login function was not declared mathi
 
 mainloop()
-    
