@@ -102,15 +102,15 @@ def add_item():
     additem.title("favimark/ADD-ITEMS")
     name_label=Label(additem,text="Mark your favourites",)
     name_label.pack()
-    newe1=Text(additem,height=1,width=40)
+    newe1=Entry(additem)
     newe1.pack()
     type_label=Label(additem,text="Type (Book/Movie/Anime/Manga/Manhua/Shows)")
     type_label.pack()
-    newe2=Text(additem,height=1,width=40)
+    newe2=Entry(additem)
     newe2.pack()
-    desc_label=Label(additem,text="Descripton/Review")
+    desc_label=Label(additem,text="Review. eg:Good/Decent/Excellent")
     desc_label.pack()
-    newe3=Text(additem,height=10,width=40)
+    newe3=Entry(additem)
     newe3.pack()
     addnew=Button(additem,text=" ADD ",command=create, bg='grey', fg='white')
     addnew.pack()
@@ -129,15 +129,15 @@ def create():
     )
     
     # Insert new item into the table
-    c.execute('INSERT INTO favourites VALUES(?,?,?)',(newe1.get('1.0', END), newe2.get('1.0', END), newe3.get('1.0', END)))
+    c.execute('INSERT INTO favourites VALUES(?,?,?)',(newe1.get(), newe2.get(), newe3.get()))
     #newe1.get('1.0',END)-> newe1 is an text entry method, indexing required to retrieve values....!!!!!
     conn.commit()
     conn.close()
     
     # Clear the text boxes #->indexing starts from 1 in text boxes
-    newe1.delete('1.0',END)
-    newe2.delete('1.0',END)
-    newe3.delete('1.0',END)
+    newe1.delete(0,END)
+    newe2.delete(0,END)
+    newe3.delete(0,END)
     display_items()
     additem.destroy()
    
@@ -160,15 +160,15 @@ def edit_item():
     edit_window.geometry('300x300')
     name_label=Label(edit_window,text="Edit your marked favourites",)
     name_label.pack()
-    neweditse1=Text(edit_window,height=1,width=40)
+    neweditse1=Entry(edit_window)
     neweditse1.pack()
     type_label=Label(edit_window,text="Edit the Type (Book/Movie/Anime/Manga/Manhua/Shows)")
     type_label.pack()
-    neweditse2=Text(edit_window,height=1,width=40)
+    neweditse2=Entry(edit_window)
     neweditse2.pack()
-    desc_label=Label(edit_window,text="Edit Descripton/Review")
+    desc_label=Label(edit_window,text="Edit Review")
     desc_label.pack()
-    neweditse3=Text(edit_window,height=10,width=40)
+    neweditse3=Entry(edit_window)
     neweditse3.pack()
     edit_add=Button(edit_window,text=" SAVE ",command=update, bg='grey', fg='white')
     edit_add.pack(pady=10)
@@ -181,9 +181,9 @@ def edit_item():
         result = c.fetchall()
         if result:
             for i in result:
-                neweditse1.insert(1.0, i[0])
-                neweditse2.insert(1.0, i[1])
-                neweditse3.insert(1.0, i[2])
+                neweditse1.insert(0, i[0])
+                neweditse2.insert(0, i[1])
+                neweditse3.insert(0, i[2])
         else:
             messagebox.showerror('Error', 'OID not found in database')
     except sqlite3.Error as e:
@@ -204,9 +204,9 @@ def update():
         WHERE oid= :oid
         """,
         {
-            "a":neweditse1.get('1.0','end-1c'), #exclude \n using end-1c and not END
-            "b":neweditse2.get('1.0','end-1c'),
-            "c":neweditse3.get('1.0','end-1c'),
+            "a":neweditse1.get(), #exclude \n using end-1c and not END
+            "b":neweditse2.get(),
+            "c":neweditse3.get(),
             "oid":edite1.get(),
         },
     )
