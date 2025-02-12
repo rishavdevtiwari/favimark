@@ -32,6 +32,7 @@ password_entry.pack()
 #show password checkbox that calls 'showpassword' function
 show_password_var = IntVar()
 show_password_checkbox = Checkbutton(frame, text="Show", variable=show_password_var, command=lambda: show_password(password_entry, show_password_var))
+#lambda function used to pass parameters for show function
 show_password_checkbox.pack(pady=5)
 
 def login(): #this contains a separate window after user authentication
@@ -42,9 +43,14 @@ def login(): #this contains a separate window after user authentication
         password_entry.delete(0,END)
     else:
         messagebox.showerror('Warning', 'Invalid username or password')
-        
+
+#   FUNCTION TO DISPLAY DASHBOARD OF FAVIMARK
+#->CONTAINS 4 BUTTONS AND ONE INTERFACE BELOW IT
+#->MADE FULL SCREEN FOR BETTER UI
+#->ROOTS IS USED AS THE WINDOW HERE.
+       
 def dashboard():
-        global roots
+        global roots #giving roots window a global scope to access it from other windows
         roots = Toplevel(root)
         roots.state('zoomed') # this will make it fullscreen
         roots.title("favimark/Dashboard")
@@ -53,11 +59,11 @@ def dashboard():
         top_frame = Frame(roots, bg='white')
         top_frame.pack(side=TOP, fill=BOTH, padx=1, pady=10,expand=TRUE)
 
-        # UI for buttons 
+        # UI for buttons which aligns buttons at top of page using top_frame
         button_frame = Frame(top_frame, bg='white')
         button_frame.pack(side=LEFT)
 
-        # Buttons
+        # Buttons-> add,edit,search,delete
         add_button = Button(button_frame, text="ADD", command=add_item, font=('Arial', 12), bg='grey', fg='white')
         add_button.pack(side=LEFT, padx=10)
 
@@ -72,30 +78,52 @@ def dashboard():
         
         display_items(roots)
 
+#   FUNCTION TO DISPLAY ITEMS IN DASHBOARD
+#->CREATES AN INTERFACE TO DISPLAY ITEMS IN SHORT LISTS IF DOESNT EXIST
+#->OVERWRITES NEWER DATA FROM DATABASE TO DASHBOARD
+
 def display_items(roots):
-    global text_widget,item_frame
     if 'text_widget' not in globals():
+        #globals returns all variables with global scope
         item_frame = Frame(roots)
         item_frame.pack(fill=BOTH, expand=True)
         text_widget = Text(item_frame, width=100, height=50)
         text_widget.pack(fill=BOTH, expand=True)
+        #if text widget does not exist
+        #i.e there are no records to display
+        #text widget is created as an interface
+        #to display the records from the database
     else:
         text_widget.delete('1.0', END)
+        #if text_widget exists, overwritten by this code
 
     conn = sqlite3.connect('favimark.db')
     c = conn.cursor()
-    c.execute("SELECT *, oid FROM favourites")
+    c.execute("SELECT *, oid FROM favourites")#fetches data using rowid ->oid
+    #in summary, all rows are fetched using fetchall
     items = c.fetchall()
     conn.close()
 
-    for i, item in enumerate(items, start=1):
+    for i, item in enumerate(items, start=1):#list starts from 1.
+        #with enumerate, loop over iterable items
+        #with automatic indexing along with it.
+        #for loop unpacks tuples returned by enumerate
         item_id = item[3]
         item_name = item[0]
         item_type = item[1]
         item_description = item[2]
 
         text_widget.insert(END, f"{i}. Name: {item_name}\n\n---Type: {item_type}\n\n---Description: {item_description}\n\n")
-
+        #no need to use config since overwriting and creating if not created automatically happens
+        
+#   FUNCTION TO ADD ITEMS TO DATABASE
+#->CREATES A NEW WINDOW FOR ADDING ITEMS TO DATABASE
+#->ASKS FOR ITEM NAME, TYPE AND DESCRIPTION
+#->ADDS ITEM TO DATABASE IF ALL FIELDS ARE FILLED
+#->IF ANY FIELD IS LEFT BLANK, A MESSAGE BOX APPEARS
+#->UPON COMPLETION, SUCCESSFUL ADDITION MESSAGE BOX APPEARS
+#->AFTER CLICKING OK ON IT, ADD WINDOW CLOSES AND DASHBOARD REDIRECTION
+        
 def add_item():
     global newe1, newe2, newe3, additem
     additem = Toplevel()
@@ -114,10 +142,14 @@ def add_item():
     desc_label.pack(pady=10)
     newe3=Entry(additem)
     newe3.pack()
-    addnew=Button(additem,text=" ADD ",command=lambda: create(additem), bg='grey', fg='white')
+    addnew=Button(additem,text=" ADD ",command=create, bg='grey', fg='white')
     addnew.pack(pady=20)
 
-def create(additem):
+#   SUB-FUNCTION OF ADD ITEM FUNCTIONALITY
+#-> ADDS ITEMS TO THE DATABASE
+#-> THIS FUNCTION PROVIDES THE SUCCESFUL COMPLETION MESSAGE BOX.
+
+def create():
     conn=sqlite3.connect('favimark.db')
     c=conn.cursor()
     
@@ -141,6 +173,11 @@ def create(additem):
     newe3.delete(0,END)
     additem.destroy()
     display_items(roots)
+    
+#   EDIT ITEMS IN FAVIMARK
+#-> THIS FUNCTION PROVIDES THE EDIT ITEM WINDOW PROMPT
+#-> ASKS THE ID OF THE RECORD WHICH THE USER WANTS TO EDIT
+#-> AFTER CLICKING ON PROCEED TO EDIT REDIRECTS TO ANOTHER WINDOW
 
 def edit_prompt():
     global edit_prompt_window,edite1
@@ -154,7 +191,13 @@ def edit_prompt():
     edite1.pack()
     edit=Button(edit_prompt_window,text="PROCEED TO EDIT",command=edit_item,bg='grey', fg='white')
     edit.pack(pady=10)
-    
+
+#AFTER CLICKING ON PROCEED TO EDIT, THIS FUNCTION IS CALLED
+#->SIMILAR TO ADD ITEMS FUNCTION
+#->DISPLAYS THE DATA OF THE ID NUMBER ENTERED BY THE USER WHICH CAN BE EDITED
+#->AFTER EDITING IT, SUCCESFUL COMPLETION MESSAGEBOX APPEARS
+#->AFTER WHICH THIS EDIT PROMPT APPEARS AGAIN.
+  
 def edit_item():
     global neweditse1,neweditse2,neweditse3,edite1,edit_prompt_window,edit_window
     edit_window=Toplevel()
@@ -175,7 +218,7 @@ def edit_item():
     neweditse3.pack()
     edit_add=Button(edit_window,text=" SAVE ",command=update, bg='grey', fg='white')
     edit_add.pack(pady=20)
-    
+    #ERROR HANDLING OPTIMIZATION IN CASE RECORD IS NOT FOUND
     try:
         conn = sqlite3.connect('favimark.db')
         c = conn.cursor()
@@ -194,6 +237,10 @@ def edit_item():
     finally:
         if conn:
             conn.close()
+            
+#   AFTER EDITS ARE MADE AND SAVE BUTTON IS PRESSED THIS FUNCTION IS CALLED
+#->THIS FUNCTION USES SQL CODE TO MAKE CHANGES TO THE RESPECTIVE RECORD ACCORDINGLY
+#->AFTER WHICH THE MESSAGEBOX APPEARS WITH A SUCCESSFUL MESSAGE
     
 def update():
     global neweditse1,neweditse2,neweditse3,edite1
@@ -220,6 +267,13 @@ def update():
     edit_window.destroy()
     edit_prompt_window.destroy()
     display_items(roots)
+    
+#   DELETE RECORDS IN FAVIMARK
+#->FIRST A PROMPT APPEARS SIMILAR TO EDIT PROMPT 
+#->UPON ENTERING ID OF RECORD WE WANT TO DELETE
+#->SUCCESSFULLY DELETED MESSAGE APPEARS
+#->THEN RECORD IS DELETED, WINDOW IS CLOSED AND DASHBOARD IS OVERWRITTEN 
+#->OVERWRITTEN DASHBOARD HAS THAT RECORD DELETED
 
 def delete_prompt():
     global delete_prompt_window,dele1
@@ -231,9 +285,12 @@ def delete_prompt():
     del_text.pack(pady=50)
     dele1=Entry(delete_prompt_window)
     dele1.pack()
-    deletee=Button(delete_prompt_window,text=" DELETE ",command=delete_item,bg='grey', fg='white')
+    deletee=Button(delete_prompt_window,text=" DELETE ",command=delete_item, font=('Arial', 10), bg='red', fg='white')
     deletee.pack(pady=10)
     
+#DELETE_ITEM FUNCTION IS USED TO DELETE THE RECORDS FROM THE DATABASE 
+#THEN DASHBOARD IS REFRESHED TO SHOW THAT THE RECORD HAS BEEN ERASED 
+
 def delete_item():
     conn = sqlite3.connect('favimark.db')
     c = conn.cursor()
@@ -260,6 +317,13 @@ def delete_item():
         display_items(roots)
         delete_prompt_window.destroy()
 
+#SEARCH BUTTON'S FUNCTIONALITY
+#   SEARCH MARKED FAVOURITES IN FAVIMARK
+#->PROMPT WINDOW APPEARS
+#->TWO BUTTONS, SEARCH BY ID AND SEARCH BY TYPE
+#->SEARCH BY ID HAS ONE FUNCTION TO CARRY FUNCTIONALITY
+#->SEARCH BY TYPE HAS ONE FUNCTION TO CARRY FUNCTIONALITY
+
 def search_prompt():
     global search_what
     search_what=Toplevel()
@@ -274,7 +338,10 @@ def search_prompt():
     search_title_label.pack(pady=20)
     search_title_button=Button(search_what,text="Search by Type",command=search_by_type,bg='grey', fg='white')
     search_title_button.pack()
-    
+   
+#THIS IS THE SEARCH BY ID PROMPT WHERE USER ENTERS ID OF RECORD THEY WANT TO VIEW
+#THEN REDIRECTED TO ANOTHER WINDOW
+ 
 def search_by_id():
     global searchbyid, idsearch_entry
     searchbyid = Toplevel()
@@ -289,7 +356,12 @@ def search_by_id():
     idsearch_button.pack(pady=10)
     search_what.iconify()
 
+#THIS FUNCTION PROVIDES USER WITH ANOTHER WINDOW THAT RETRIEVES DATA FROM DATABASE
+#SQL IS USED TO RETRIEVE DATA AND DISPLAY IN THE NEW WINDOW
+#ONLY ONE RECORD IS SHOWN BECAUSE ONE RECORD HAS ONE ID, ID IS UNIQUE
+
 def idsearch():
+    global idsearch_window
     id = idsearch_entry.get()
     # Create a new window to display the search results
     idsearch_window = Toplevel()
@@ -301,7 +373,11 @@ def idsearch():
     result_label = Label(idsearch_window, text="Search Result")
     result_label.pack(pady=10)
     result_text = Text(idsearch_window)
-    result_text.pack()
+    result_text.pack(pady=10)
+    
+    # BUTTON TO EXIT
+    exit_button = Button(idsearch_window, text="Exit", command=idsearch_exit, font=('Arial', 12), bg='red',fg='white')
+    exit_button.pack()
     
     # Retrieve the record details from the database
     conn = sqlite3.connect('favimark.db')
@@ -325,6 +401,19 @@ def idsearch():
     # Iconify the search window
     searchbyid.iconify()
 
+#   UPON CLICKING EXIT BUTTON, THIS FUNCTION CALLED
+#->CLOSES THREE WINDOWS OF SEARCH
+
+def idsearch_exit():
+        idsearch_window.destroy()
+        searchbyid.destroy()
+        search_what.destroy()
+
+#SEARCH BY TYPE PROMPT
+#USER ENTERS THE TYPE OF ITEMS THEY WANT TO SEARCH FOR
+#FOR EXAMPLE: BOOK,MOVIE,ANIME,MANGA,MANHUA
+#->THEN THE TYPESEARCH FUNCTION IS CALLED
+#->WHICH USES SQL TO SEARCH ALL RECORDS WITH THAT TYPE
     
 def search_by_type():
     global searchbytype, typesearch_entry
@@ -340,7 +429,12 @@ def search_by_type():
     typesearch_button.pack(pady=10)
     search_what.iconify()
 
+#IMPLEMENTATION OF SQL TO SEARCH ALL RECORDS WITH THE GIVEN TYPE
+#THEN MULTIPLE RECORDS ARE SHOWN BASED OFF OF HOW MANY RECORDS HAVE SAME TYPE
+#WINDOWS HAVE TO BE MANUALLY CLOSED, OR WE CAN PRESS A BUTTON BELOW THE PAGE TO QUIT.
+
 def typesearch():
+    global typesearch_window
     type = typesearch_entry.get()
     # Create a new window to display the search results
     typesearch_window = Toplevel()
@@ -353,6 +447,10 @@ def typesearch():
     result_label.pack()
     result_text = Text(typesearch_window)
     result_text.pack()
+    
+    # BUTTON TO EXIT
+    exit_button = Button(typesearch_window, text="Exit", command=typesearch_exit, font=('Arial', 12), bg='red',fg='white')
+    exit_button.pack(pady=10)
     
     # Retrieve the record details from the database
     conn = sqlite3.connect('favimark.db')
@@ -376,9 +474,21 @@ def typesearch():
     
     # Iconify the search window
     searchbytype.iconify()
-    
-    
 
+#UPON CLICKING EXIT BUTTON, THIS FUNCTION CALLED
+#->CLOSES THREE WINDOWS OF SEARCH
+  
+def typesearch_exit():
+    searchbytype.destroy()
+    search_what.destroy()
+    typesearch_window.destroy()
+    
+#   SHOW PASSWORD FUNCTIONALITY
+#->LOGIN PAGE-> SHOW PASSWORD BHANNE CHECKBOX CHA
+#->UPON CLICKING THAT TWO VALUES ARE PASSED AS PARAMETERS HERE
+#->ONE IS THE VALUE ENTERED WHICH IS THE PASSWORD,
+#->ANOTHER IS THE VALUE 0F THE CHECKBOX
+#->IF CHECKBOX KO VALUE IS TRUE THEN NON ENCRYPTED FORM IS DISPLAYED.
 
 def show_password(entry, var):
 #var is the value received from checkbox that says "show"
@@ -395,4 +505,4 @@ login_button = Button(frame, text="Login", command=login, font=('Arial', 12), bg
 login_button.pack(pady=20)
 #login button placed at last cuz login function was not declared mathi
 
-mainloop()
+mainloop() #root window keeps running in the background
