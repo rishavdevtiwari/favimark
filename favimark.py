@@ -32,7 +32,7 @@ password_entry.pack()
 #show password checkbox that calls 'showpassword' function
 show_password_var = IntVar()
 show_password_checkbox = Checkbutton(frame, text="Show", variable=show_password_var, command=lambda: show_password(password_entry, show_password_var))
-show_password_checkbox.pack()
+show_password_checkbox.pack(pady=5)
 
 def login(): #this contains a separate window after user authentication
     if username_entry.get() == 'favimarko' and password_entry.get() == 'qwerty':
@@ -152,7 +152,7 @@ def edit_prompt():
     edit_text.pack(pady=50)
     edite1=Entry(edit_prompt_window)
     edite1.pack()
-    edit=Button(edit_prompt_window,text="PROCEED TO EDIT",command=edit_item)
+    edit=Button(edit_prompt_window,text="PROCEED TO EDIT",command=edit_item,bg='grey', fg='white')
     edit.pack(pady=10)
     
 def edit_item():
@@ -231,7 +231,7 @@ def delete_prompt():
     del_text.pack(pady=50)
     dele1=Entry(delete_prompt_window)
     dele1.pack()
-    deletee=Button(delete_prompt_window,text=" DELETE ",command=delete_item)
+    deletee=Button(delete_prompt_window,text=" DELETE ",command=delete_item,bg='grey', fg='white')
     deletee.pack(pady=10)
     
 def delete_item():
@@ -268,11 +268,11 @@ def search_prompt():
     search_what.iconbitmap('search.ico')
     search_id_label=Label(search_what,text="Click below to search by ID")
     search_id_label.pack(pady=20)
-    search_id_button=Button(search_what,text="Search by ID",command=search_by_id)
+    search_id_button=Button(search_what,text="Search by ID",command=search_by_id,bg='grey', fg='white')
     search_id_button.pack()
     search_title_label=Label(search_what,text="Click below to search by Type")
     search_title_label.pack(pady=20)
-    search_title_button=Button(search_what,text="Search by Type",command=search_by_type)
+    search_title_button=Button(search_what,text="Search by Type",command=search_by_type,bg='grey', fg='white')
     search_title_button.pack()
     
 def search_by_id():
@@ -285,8 +285,8 @@ def search_by_id():
     idsearch_label.pack(pady=30)
     idsearch_entry = Entry(searchbyid)
     idsearch_entry.pack()
-    idsearch_button = Button(searchbyid, text="Search", command=idsearch)
-    idsearch_button.pack()
+    idsearch_button = Button(searchbyid, text="Search", command=idsearch,bg='grey', fg='white')
+    idsearch_button.pack(pady=10)
     search_what.iconify()
 
 def idsearch():
@@ -294,7 +294,7 @@ def idsearch():
     # Create a new window to display the search results
     idsearch_window = Toplevel()
     idsearch_window.title('Search Result')
-    idsearch_window.geometry('400x400')
+    idsearch_window.geometry('700x500')
     idsearch_window.iconbitmap('search.ico')
     
     # Display the search results
@@ -327,26 +327,54 @@ def idsearch():
 
     
 def search_by_type():
-    global searchbytype
-    searchbytype=Toplevel()
+    global searchbytype, typesearch_entry
+    searchbytype = Toplevel()
     searchbytype.iconbitmap('search.ico')
     searchbytype.title('Search by Type')
     searchbytype.geometry('400x400')
-    typesearch_label=Label(searchbytype,text="Enter the ID of the record you want to search")
+    typesearch_label = Label(searchbytype, text="Enter the Type of the record you want to search")
     typesearch_label.pack(pady=30)
-    typesearch_entry=Entry(searchbytype)
+    typesearch_entry = Entry(searchbytype)
     typesearch_entry.pack()
-    typesearch_button=Button(searchbytype,text="Search",command=typesearch)
-    typesearch_button.pack()
+    typesearch_button = Button(searchbytype, text="Search", command=typesearch,bg='grey', fg='white')
+    typesearch_button.pack(pady=10)
     search_what.iconify()
-    
+
 def typesearch():
-    typesearch=Toplevel()
-    typesearch.title('Search Result')
-    typesearch.geometry('700x700')
-    typesearch.iconbitmap('search.ico')
-    typesearch_label=Label(idsearch,text="Search Result")
-    typesearch_label.pack()
+    type = typesearch_entry.get()
+    # Create a new window to display the search results
+    typesearch_window = Toplevel()
+    typesearch_window.title('Search Result')
+    typesearch_window.geometry('700x500')
+    typesearch_window.iconbitmap('search.ico')
+    
+    # Display the search results
+    result_label = Label(typesearch_window, text="Search Result")
+    result_label.pack()
+    result_text = Text(typesearch_window)
+    result_text.pack()
+    
+    # Retrieve the record details from the database
+    conn = sqlite3.connect('favimark.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM favourites WHERE fav_type=?', (type,))
+    records = c.fetchall()
+    conn.close()
+    
+    # Display the record details
+    if records:
+        for i, record in enumerate(records, start=1):
+            item_name = record[0]
+            item_type = record[1]
+            item_description = record[2]
+            
+            result_text.insert(INSERT, f"{i}. Name: {item_name}\n\n---Type: {item_type}\n\n---Description: {item_description}\n\n")
+    else:
+        result_text.insert(INSERT, "Record not found")
+    
+    result_text.config(state=DISABLED)
+    
+    # Iconify the search window
     searchbytype.iconify()
     
     
