@@ -9,13 +9,22 @@ root.geometry('700x700')  # authentication section
 root.iconbitmap('login.ico') #icon of window
 root.resizable(0,0) #non-resizable
 
+text_widget=None
+
 #box centered in the page that contains the login UI
 frame = Frame(root, bg='white', highlightbackground='black', highlightthickness=1)
 frame.place(relx=0.5, rely=0.5, anchor='center', relwidth=0.6, relheight=0.6)
 
 #Title included on the top and centered
 title_label = Label(frame, text="LOG IN/SIGN IN", font=('Arial', 18,'bold','italic'), bg='white')
-title_label.pack(pady=60)
+title_label.pack(pady=20)
+
+image = PhotoImage(file="profile.png").subsample(4, 4)
+Label(
+    frame,
+    image=image,
+    relief=RAISED,
+).pack(pady=20)
 
 #username entry for authentication
 username_label = Label(frame, text="Username", font=('Arial', 12,'bold'), bg='white')
@@ -83,39 +92,44 @@ def dashboard():
 #->OVERWRITES NEWER DATA FROM DATABASE TO DASHBOARD
 
 def display_items(roots):
-    if 'text_widget' not in globals():
-        #globals returns all variables with global scope
+    global text_widget  # Declare text_widget as global to access it across functions
+    
+    if text_widget is None:
+        # Create frame and text widget with scrollbar as before
         item_frame = Frame(roots)
         item_frame.pack(fill=BOTH, expand=True)
-        text_widget = Text(item_frame, width=100, height=50)
-        text_widget.pack(fill=BOTH, expand=True)
-        #if text widget does not exist
-        #i.e there are no records to display
-        #text widget is created as an interface
-        #to display the records from the database
-    else:
-        text_widget.delete('1.0', END)
-        #if text_widget exists, overwritten by this code
 
+        text_widget = Text(item_frame, wrap=WORD, width=100, height=50)
+        text_widget.pack(side=LEFT, fill=BOTH, expand=True)
+
+        scrollbar = Scrollbar(item_frame, orient=VERTICAL, command=text_widget.yview)
+        scrollbar.pack(side=RIGHT, fill=Y)
+        text_widget.config(yscrollcommand=scrollbar.set)
+    else:
+        # Clear previous content in text widget
+        text_widget.delete('1.0', END)
+
+    # Fetch data from the database
     conn = sqlite3.connect('favimark.db')
     c = conn.cursor()
-    c.execute("SELECT *, oid FROM favourites")#fetches data using rowid ->oid
-    #in summary, all rows are fetched using fetchall
+    c.execute("SELECT *, oid FROM favourites")  # Fetch all items from the database
     items = c.fetchall()
     conn.close()
 
-    for i, item in enumerate(items, start=1):#list starts from 1.
-        #with enumerate, loop over iterable items
-        #with automatic indexing along with it.
-        #for loop unpacks tuples returned by enumerate
-        item_id = item[3]
+    # Prepare the text content to display
+    item_text = ""
+    for i, item in enumerate(items, start=1):
         item_name = item[0]
         item_type = item[1]
         item_description = item[2]
+        item_text += f"{i}. Name: {item_name}\n---Type: {item_type}\n---Description: {item_description}\n\n"
 
-        text_widget.insert(END, f"{i}. Name: {item_name}\n\n---Type: {item_type}\n\n---Description: {item_description}\n\n")
-        #no need to use config since overwriting and creating if not created automatically happens
-        
+    # Insert the new content into the text widget
+    text_widget.insert(END, item_text)
+
+    # Automatically scroll to the bottom
+    text_widget.yview(END)
+   
 #   FUNCTION TO ADD ITEMS TO DATABASE
 #->CREATES A NEW WINDOW FOR ADDING ITEMS TO DATABASE
 #->ASKS FOR ITEM NAME, TYPE AND DESCRIPTION
@@ -150,6 +164,11 @@ def add_item():
 #-> THIS FUNCTION PROVIDES THE SUCCESFUL COMPLETION MESSAGE BOX.
 
 def create():
+            # Check if any field is empty
+    if not newe1.get() or not newe2.get() or not newe3.get():
+        # If any field is empty, show a warning message
+        messagebox.showwarning("Input Error", "Please enter values for all fields.")
+        return  # Do not add the record if fields are empty
     conn=sqlite3.connect('favimark.db')
     c=conn.cursor()
     
@@ -166,13 +185,13 @@ def create():
     messagebox.showinfo('Success', 'Item created successfully')
     conn.commit()
     conn.close()
+    display_items(roots)
     
     # Clear the text boxes #->indexing starts from 1 in text boxes
     newe1.delete(0,END)
     newe2.delete(0,END)
     newe3.delete(0,END)
     additem.destroy()
-    display_items(roots)
     
 #   EDIT ITEMS IN FAVIMARK
 #-> THIS FUNCTION PROVIDES THE EDIT ITEM WINDOW PROMPT
@@ -200,6 +219,11 @@ def edit_prompt():
   
 def edit_item():
     global neweditse1,neweditse2,neweditse3,edite1,edit_prompt_window,edit_window
+                # Check if any field is empty
+    if not edite1.get():
+        # If any field is empty, show a warning message
+        messagebox.showwarning("Input Error", "Please enter ID of record you want to edit.")
+        return  # Do not add the record if fields are empty
     edit_window=Toplevel()
     edit_window.title('favimark/EDIT_ITEMS')
     edit_window.geometry('400x400')
@@ -232,6 +256,8 @@ def edit_item():
                 neweditse3.insert(0, i[2])
         else:
             messagebox.showerror('Error', 'OID not found in database')
+            edit_window.destroy()
+            return
     except sqlite3.Error as e:
         messagebox.showerror('Error', e)
     finally:
@@ -244,6 +270,11 @@ def edit_item():
     
 def update():
     global neweditse1,neweditse2,neweditse3,edite1
+                # Check if any field is empty
+    if not neweditse1.get() or not neweditse2.get() or not neweditse3.get():
+        # If any field is empty, show a warning message
+        messagebox.showwarning("Edited Val Error", "Please donot leave edited values empty!!!")
+        return  # Do not add the record if fields are empty
     conn=sqlite3.connect('favimark.db')
     c=conn.cursor()
     c.execute(
@@ -260,13 +291,13 @@ def update():
             "oid":edite1.get(),
         },
     )
-    messagebox.showinfo('Success', 'Item edited successfully')
+    messagebox.showinfo('Successful Edition', 'Item edited successfully')
     conn.commit()
     conn.close()
+    display_items(roots)
     edite1.delete(0,END)
     edit_window.destroy()
     edit_prompt_window.destroy()
-    display_items(roots)
     
 #   DELETE RECORDS IN FAVIMARK
 #->FIRST A PROMPT APPEARS SIMILAR TO EDIT PROMPT 
@@ -292,13 +323,30 @@ def delete_prompt():
 #THEN DASHBOARD IS REFRESHED TO SHOW THAT THE RECORD HAS BEEN ERASED 
 
 def delete_item():
+    # Check if any field is empty
+    if not dele1.get():
+        # If any field is empty, show a warning message
+        messagebox.showwarning("Records Input Error", "Please enter ID of record you want to delete.")
+        return  # Do not add the record if fields are empty
     conn = sqlite3.connect('favimark.db')
     c = conn.cursor()
     oid = dele1.get()
+    
+        # Ask for confirmation before deleting
+    confirm = messagebox.askyesno("Confirm Deletion", f"Are you sure you want to delete record ID {oid}?")
+    if not confirm:
+        return  # If user selects "No", exit function without deleting
+    
     try:
         c.execute('DELETE FROM favourites WHERE oid=?', (oid,))
         conn.commit()
         
+
+        # Check if any row was actually deleted
+        if c.rowcount == 0:
+            # If no rows were deleted, show an error message
+            messagebox.showwarning("Deletion Error", f"Record with ID {oid} does not exist.")
+            return  # Exit the function as the record doesn't exist
         
         # Update OID of remaining items
         c.execute('SELECT oid FROM favourites WHERE oid>?', (oid,))
@@ -309,7 +357,7 @@ def delete_item():
             conn.commit()
         
         
-        messagebox.showinfo('Success', 'Item deleted successfully')
+        messagebox.showinfo('Successful Deletion', 'Item deleted successfully')
     except sqlite3.Error as e:
         messagebox.showerror('Error', str(e))
     finally:
@@ -361,6 +409,11 @@ def search_by_id():
 #ONLY ONE RECORD IS SHOWN BECAUSE ONE RECORD HAS ONE ID, ID IS UNIQUE
 
 def idsearch():
+    # Check if any field is empty
+    if not idsearch_entry.get():
+        # If any field is empty, show a warning message
+        messagebox.showwarning("Search ID Error", "Please enter ID of record you want to search.")
+        return  # Do not add the record if fields are empty
     global idsearch_window
     id = idsearch_entry.get()
     # Create a new window to display the search results
@@ -434,6 +487,11 @@ def search_by_type():
 #WINDOWS HAVE TO BE MANUALLY CLOSED, OR WE CAN PRESS A BUTTON BELOW THE PAGE TO QUIT.
 
 def typesearch():
+    # Check if any field is empty
+    if not typesearch_entry.get():
+        # If any field is empty, show a warning message
+        messagebox.showwarning("Type Search Error", "Please enter the type of the book you want to search!!!.")
+        return  # Do not add the record if fields are empty
     global typesearch_window
     type = typesearch_entry.get()
     # Create a new window to display the search results
@@ -495,10 +553,12 @@ def show_password(entry, var):
 #if var is True, then show the password
 #if var is False, then hide the password
 
-    if var.get() == 1:
-        entry.config(show='')
+    if var.get():
+        entry.config(show='')  # Show password
+        show_password_checkbox.config(text="Hide")  # Change checkbox text to 'Hide'
     else:
-        entry.config(show='*')
+        entry.config(show='*')  # Hide password
+        show_password_checkbox.config(text="Show")  # Change checkbox text to 'Show'
         
 #login button when pressed redirects user to the new window which is favimark ko dashboard
 login_button = Button(frame, text="Login", command=login, font=('Arial', 12), bg='grey', fg='white',bd=3)
