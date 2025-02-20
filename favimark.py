@@ -14,24 +14,24 @@ frame = Frame(root, bg='white', highlightbackground='black', highlightthickness=
 frame.place(relx=0.5, rely=0.5, anchor='center', relwidth=0.6, relheight=0.6)
 
 #Title included on the top and centered
-title_label = Label(frame, text="LOG IN/SIGN IN", font=('Arial', 18), bg='white')
+title_label = Label(frame, text="LOG IN/SIGN IN", font=('Arial', 18,'bold','italic'), bg='white')
 title_label.pack(pady=60)
 
 #username entry for authentication
-username_label = Label(frame, text="Username", font=('Arial', 12), bg='white')
+username_label = Label(frame, text="Username", font=('Arial', 12,'bold'), bg='white')
 username_label.pack()
-username_entry = Entry(frame, font=('Arial', 12))
+username_entry = Entry(frame, font=('Arial', 12),bd=5) #bd : border size for text box
 username_entry.pack()
 
 #password entry for authentication
-password_label = Label(frame, text="Password", font=('Arial', 12), bg='white')
+password_label = Label(frame, text="Password", font=('Arial', 12,'bold'), bg='white')
 password_label.pack()
-password_entry = Entry(frame, show='*', font=('Arial', 12))
+password_entry = Entry(frame, show='*', font=('Arial', 12),bd=5) #bd: border size for text box
 password_entry.pack()
 
 #show password checkbox that calls 'showpassword' function
 show_password_var = IntVar()
-show_password_checkbox = Checkbutton(frame, text="Show", variable=show_password_var, command=lambda: show_password(password_entry, show_password_var))
+show_password_checkbox = Checkbutton(frame, text="show", variable=show_password_var, command=lambda: show_password(password_entry, show_password_var),)
 #lambda function used to pass parameters for show function
 show_password_checkbox.pack(pady=5)
 
@@ -64,16 +64,16 @@ def dashboard():
         button_frame.pack(side=LEFT)
 
         # Buttons-> add,edit,search,delete
-        add_button = Button(button_frame, text="ADD", command=add_item, font=('Arial', 12), bg='grey', fg='white')
+        add_button = Button(button_frame, text="ADD", command=add_item, font=('Arial', 12), bg='grey', fg='white',bd=3)
         add_button.pack(side=LEFT, padx=10)
 
-        edit_button = Button(button_frame, text="EDIT", command=edit_prompt, font=('Arial', 12), bg='grey', fg='white')
+        edit_button = Button(button_frame, text="EDIT", command=edit_prompt, font=('Arial', 12), bg='grey', fg='white',bd=3)
         edit_button.pack(side=LEFT, padx=10)
         
-        search_button = Button(button_frame, text=" SEARCH ", command=search_prompt, font=('Arial', 12), bg='grey', fg='white')
+        search_button = Button(button_frame, text=" SEARCH ", command=search_prompt, font=('Arial', 12), bg='grey', fg='white',bd=3)
         search_button.pack(side=LEFT, padx=10)
 
-        delete_button = Button(button_frame, text="DELETE", command=delete_prompt, font=('Arial', 12), bg='grey', fg='white')
+        delete_button = Button(button_frame, text="DELETE", command=delete_prompt, font=('Arial', 12), bg='grey', fg='white',bd=3)
         delete_button.pack(side=LEFT, padx=10)
         
         display_items(roots)
@@ -132,17 +132,17 @@ def add_item():
     additem.title("favimark/ADD-ITEMS")
     name_label=Label(additem,text="Mark your favourites",)
     name_label.pack(pady=10)
-    newe1=Entry(additem)
+    newe1=Entry(additem,bd=5)
     newe1.pack()
     type_label=Label(additem,text="Type (Book/Movie/Anime/Manga/Manhua/Shows)")
     type_label.pack(pady=10)
-    newe2=Entry(additem)
+    newe2=Entry(additem,bd=5)
     newe2.pack()
     desc_label=Label(additem,text="Review. eg:Good/Decent/Excellent")
     desc_label.pack(pady=10)
-    newe3=Entry(additem)
+    newe3=Entry(additem,bd=5)
     newe3.pack()
-    addnew=Button(additem,text=" ADD ",command=create, bg='grey', fg='white')
+    addnew=Button(additem,text=" ADD ",command=create, bg='grey', fg='white',bd=5)
     addnew.pack(pady=20)
 
 #   SUB-FUNCTION OF ADD ITEM FUNCTIONALITY
@@ -187,9 +187,9 @@ def edit_prompt():
     edit_prompt_window.iconbitmap('edit.ico')
     edit_text=Label(edit_prompt_window,text="Enter the ID of the records you want to edit.")
     edit_text.pack(pady=50)
-    edite1=Entry(edit_prompt_window)
+    edite1=Entry(edit_prompt_window,bd=5)
     edite1.pack()
-    edit=Button(edit_prompt_window,text="PROCEED TO EDIT",command=edit_item,bg='grey', fg='white')
+    edit=Button(edit_prompt_window,text="PROCEED TO EDIT",command=edit_item,bg='grey', fg='white',bd=5)
     edit.pack(pady=10)
 
 #AFTER CLICKING ON PROCEED TO EDIT, THIS FUNCTION IS CALLED
@@ -206,17 +206,17 @@ def edit_item():
     edit_window.iconbitmap('edit.ico')
     name_label=Label(edit_window,text="Edit your marked favourites",)
     name_label.pack(pady=10)
-    neweditse1=Entry(edit_window)
+    neweditse1=Entry(edit_window,bd=5)
     neweditse1.pack()
     type_label=Label(edit_window,text="Edit the Type (Book/Movie/Anime/Manga/Manhua/Shows)")
     type_label.pack(pady=10)
-    neweditse2=Entry(edit_window)
+    neweditse2=Entry(edit_window,bd=5)
     neweditse2.pack()
     desc_label=Label(edit_window,text="Edit Review")
     desc_label.pack(pady=10)
-    neweditse3=Entry(edit_window)
+    neweditse3=Entry(edit_window,bd=5)
     neweditse3.pack()
-    edit_add=Button(edit_window,text=" SAVE ",command=update, bg='grey', fg='white')
+    edit_add=Button(edit_window,text=" SAVE ",command=update, bg='grey', fg='white',bd=5)
     edit_add.pack(pady=20)
     #ERROR HANDLING OPTIMIZATION IN CASE RECORD IS NOT FOUND
     try:
@@ -283,9 +283,9 @@ def delete_prompt():
     delete_prompt_window.iconbitmap('delete.ico')
     del_text=Label(delete_prompt_window,text="Enter the ID of the records you want to delete.")
     del_text.pack(pady=50)
-    dele1=Entry(delete_prompt_window)
+    dele1=Entry(delete_prompt_window,bd=5)
     dele1.pack()
-    deletee=Button(delete_prompt_window,text=" DELETE ",command=delete_item, font=('Arial', 10), bg='red', fg='white')
+    deletee=Button(delete_prompt_window,text=" DELETE ",command=delete_item, font=('Arial', 10), bg='red', fg='white',bd=5)
     deletee.pack(pady=10)
     
 #DELETE_ITEM FUNCTION IS USED TO DELETE THE RECORDS FROM THE DATABASE 
@@ -332,11 +332,11 @@ def search_prompt():
     search_what.iconbitmap('search.ico')
     search_id_label=Label(search_what,text="Click below to search by ID")
     search_id_label.pack(pady=20)
-    search_id_button=Button(search_what,text="Search by ID",command=search_by_id,bg='grey', fg='white')
+    search_id_button=Button(search_what,text="Search by ID",command=search_by_id,bg='grey', fg='white',bd=3)
     search_id_button.pack()
     search_title_label=Label(search_what,text="Click below to search by Type")
     search_title_label.pack(pady=20)
-    search_title_button=Button(search_what,text="Search by Type",command=search_by_type,bg='grey', fg='white')
+    search_title_button=Button(search_what,text="Search by Type",command=search_by_type,bg='grey', fg='white',bd=3)
     search_title_button.pack()
    
 #THIS IS THE SEARCH BY ID PROMPT WHERE USER ENTERS ID OF RECORD THEY WANT TO VIEW
@@ -350,9 +350,9 @@ def search_by_id():
     searchbyid.geometry('400x400')
     idsearch_label = Label(searchbyid, text="Enter the ID of the record you want to search")
     idsearch_label.pack(pady=30)
-    idsearch_entry = Entry(searchbyid)
+    idsearch_entry = Entry(searchbyid,bd=5)
     idsearch_entry.pack()
-    idsearch_button = Button(searchbyid, text="Search", command=idsearch,bg='grey', fg='white')
+    idsearch_button = Button(searchbyid, text="Search", command=idsearch,bg='grey', fg='white',bd=3)
     idsearch_button.pack(pady=10)
     search_what.iconify()
 
@@ -376,7 +376,7 @@ def idsearch():
     result_text.pack(pady=10)
     
     # BUTTON TO EXIT
-    exit_button = Button(idsearch_window, text="Exit", command=idsearch_exit, font=('Arial', 12), bg='red',fg='white')
+    exit_button = Button(idsearch_window, text="Exit", command=idsearch_exit, font=('Arial', 12), bg='red',fg='white',bd=3)
     exit_button.pack()
     
     # Retrieve the record details from the database
@@ -423,9 +423,9 @@ def search_by_type():
     searchbytype.geometry('400x400')
     typesearch_label = Label(searchbytype, text="Enter the Type of the record you want to search")
     typesearch_label.pack(pady=30)
-    typesearch_entry = Entry(searchbytype)
+    typesearch_entry = Entry(searchbytype,bd=5)
     typesearch_entry.pack()
-    typesearch_button = Button(searchbytype, text="Search", command=typesearch,bg='grey', fg='white')
+    typesearch_button = Button(searchbytype, text="Search", command=typesearch,bg='grey', fg='white',bd=3)
     typesearch_button.pack(pady=10)
     search_what.iconify()
 
@@ -449,7 +449,7 @@ def typesearch():
     result_text.pack()
     
     # BUTTON TO EXIT
-    exit_button = Button(typesearch_window, text="Exit", command=typesearch_exit, font=('Arial', 12), bg='red',fg='white')
+    exit_button = Button(typesearch_window, text="Exit", command=typesearch_exit, font=('Arial', 12), bg='red',fg='white',bd=3)
     exit_button.pack(pady=10)
     
     # Retrieve the record details from the database
@@ -501,7 +501,7 @@ def show_password(entry, var):
         entry.config(show='*')
         
 #login button when pressed redirects user to the new window which is favimark ko dashboard
-login_button = Button(frame, text="Login", command=login, font=('Arial', 12), bg='grey', fg='white')
+login_button = Button(frame, text="Login", command=login, font=('Arial', 12), bg='grey', fg='white',bd=3)
 login_button.pack(pady=20)
 #login button placed at last cuz login function was not declared mathi
 
