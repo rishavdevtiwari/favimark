@@ -212,7 +212,7 @@ toggle_button.grid(row=9, column=0, columnspan=2, pady=10)
 def dashboard():
     global roots  # Giving roots window a global scope to access it from other windows
     roots = Toplevel(root)
-    roots.geometry('800x800')
+    roots.state('zoomed')
     roots.title("favimark/Dashboard")
 
     # Align everything at the top of the page
