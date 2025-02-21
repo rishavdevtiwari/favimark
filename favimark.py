@@ -43,18 +43,30 @@ def login():
     global current_user_id
     username = username_entry.get()
     password = password_entry.get()
-    
-    conn = sqlite3.connect("favimarko.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT user_id FROM users WHERE username=? AND password=?", (username, password))
-    user = cursor.fetchone()
-    conn.close()
 
-    if user:
-        current_user_id = user[0]
-        dashboard()
-    else:
-        messagebox.showerror("Error", "Invalid Username or Password")
+    conn = sqlite3.connect("favimark.db")
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT user_id FROM users WHERE username=? AND password=?", (username, password))
+        user = cursor.fetchone()
+
+        if user:
+            current_user_id = user[0]
+            dashboard()
+        else:
+            response = messagebox.askyesno("User Not Found", "Username does not exist. Do you want to sign up?")
+            if response:  # If "Yes" is clicked
+                toggle_mode()  # Switch to the signup screen
+
+    except sqlite3.OperationalError as e:
+            response = messagebox.askyesno("User Not Found", "User does not exist. Do you want to sign up?")
+            if response:  # If "Yes" is clicked
+                toggle_mode()  # Switch to the signup screen
+    finally:
+        conn.close()
+
+
 
 def register():
     # Retrieve data from entry fields
@@ -77,7 +89,7 @@ def register():
 
     try:
         # Connect to the database
-        conn = sqlite3.connect("favimarko.db")
+        conn = sqlite3.connect("favimark.db")
         cursor = conn.cursor()
 
         # Create the users and favourites tables if they don't exist
@@ -267,7 +279,7 @@ def display_items(roots):
 
     # Fetch user-specific data from the database
     try:
-        conn = sqlite3.connect('favimarko.db')
+        conn = sqlite3.connect('favimark.db')
         c = conn.cursor()
         c.execute("SELECT fav_name, fav_type, fav_description FROM favourites WHERE user_id=?", (current_user_id,))
         items = c.fetchall()
@@ -336,7 +348,7 @@ def create():
 
     try:
         # Connect to the database
-        conn = sqlite3.connect('favimarko.db')
+        conn = sqlite3.connect('favimark.db')
         c = conn.cursor()
 
         # Create table if it doesn't exist (already done earlier)
@@ -444,7 +456,7 @@ def edit_item():
 
     # ERROR HANDLING: Check if the record belongs to the logged-in user
     try:
-        conn = sqlite3.connect('favimarko.db')
+        conn = sqlite3.connect('favimark.db')
         c = conn.cursor()
         oid = edite1.get()
         
@@ -485,7 +497,7 @@ def update():
         return  # Do not proceed if any field is empty
     
     try:
-        conn = sqlite3.connect('favimarko.db')
+        conn = sqlite3.connect('favimark.db')
         c = conn.cursor()
         
         # Update the record in the database, making sure it belongs to the logged-in user
@@ -557,7 +569,7 @@ def delete_item():
         messagebox.showwarning("Records Input Error", "Please enter the ID of the record you want to delete.")
         return  # Do not proceed if no ID is entered
     
-    conn = sqlite3.connect('favimarko.db')
+    conn = sqlite3.connect('favimark.db')
     c = conn.cursor()
     oid = dele1.get()
     
@@ -678,7 +690,7 @@ def idsearch():
 
     try:
         # Retrieve the record by ID for the current user
-        conn = sqlite3.connect('favimarko.db')
+        conn = sqlite3.connect('favimark.db')
         c = conn.cursor()
         c.execute('SELECT fav_name, fav_type, fav_description FROM favourites WHERE rowid=? AND user_id=?', (id, current_user_id))
         record = c.fetchone()
@@ -768,7 +780,7 @@ def typesearch():
 
     try:
         # Retrieve the records by type for the current user
-        conn = sqlite3.connect('favimarko.db')
+        conn = sqlite3.connect('favimark.db')
         c = conn.cursor()
         c.execute('SELECT fav_name, fav_type, fav_description FROM favourites WHERE fav_type=? AND user_id=?', (type, current_user_id))
         records = c.fetchall()
