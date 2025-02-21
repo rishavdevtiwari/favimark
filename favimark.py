@@ -26,6 +26,8 @@ def toggle_mode():
     title_label.config(text="LOG IN / SIGN IN" if is_login else "SIGN UP / REGISTER")
     login_button.config(text="Login" if is_login else "Sign Up", command=login if is_login else register)
     toggle_button.config(text="New to favimark? Register ..." if is_login else "Already Registered? Sign In ...")
+    username_entry.delete(0, END)
+    password_entry.delete(0, END)
     
     # Show/hide confirm password field dynamically
     if is_login:
@@ -236,7 +238,8 @@ def dashboard():
 
     # Grid the exit button in the far-right position
     exit_button.grid(row=0, column=999, padx=10, sticky='e')  # column=999 will push it to the far-right
-
+    username_entry.delete(0, END)
+    password_entry.delete(0, END)
     # Display the items in the dashboard (assuming this function works as intended)
     display_items(roots)
 
