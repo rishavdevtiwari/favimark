@@ -1,13 +1,20 @@
+#(single line #) ->separation of correlated functionalities
+##(double line #) ->separation of different functionalities
+
 from tkinter import*
-from tkinter import messagebox
-import sqlite3
-from PIL import Image, ImageTk
-import uuid
+from tkinter import messagebox #Displaying error, success messages
+import sqlite3 #database
+from PIL import Image, ImageTk #images, for UI
+import uuid #generating random user ids for newer users in favimark app
 
-text_widget=None
-current_user_id=None
+text_widget=None #initializing dashboard window to none 
+current_user_id=None #logged in user id reset everytime, so no clashing happens between user ids
 
-# Function to toggle password visibility
+###################################################################################################################################################
+###################################################################################################################################################
+
+# toggle show and hide password (buttons are images)
+
 def toggle_password(entry, button):
     """Toggle password visibility and change eye button icon"""
     if entry.cget('show') == '*':
@@ -19,7 +26,11 @@ def toggle_password(entry, button):
         button.config(image=eye_open_icon)  # Change to open eye
         button.image = eye_open_icon  # Prevent garbage collection
 
-# Function to toggle between Login and Register
+###################################################################################################################################################
+###################################################################################################################################################
+
+# Toggling functionality for switching between Register and sign in
+
 def toggle_mode():
     global is_login
     is_login = not is_login
@@ -46,6 +57,11 @@ def toggle_mode():
         
     # Update the frame's background image after resizing
     update_frame_bg()
+
+###################################################################################################################################################
+###################################################################################################################################################
+
+#Login Functionality for favimark
 
 def login():
     global current_user_id
@@ -75,7 +91,10 @@ def login():
     finally:
         conn.close()
 
+###################################################################################################################################################
+###################################################################################################################################################
 
+#Register/Signup functionality for favimark
 
 def register():
     # Retrieve data from entry fields
@@ -135,16 +154,19 @@ def register():
         # Ensure connection is closed
         conn.close()
 
+###################################################################################################################################################
+###################################################################################################################################################
 
-# Create main window
+# Creation of root/main window running on mainloop() till the end
+
 root = Tk()
 root.title("favimark | Login")
 root.geometry('700x700')
-root.iconbitmap('login.ico')
+root.iconbitmap('login.ico')#icon
 root.resizable(False, False)
 
 # Open and resize the background image to match the window dimensions
-bg_image = Image.open("bookbackground_grass.png")
+bg_image = Image.open("bookbackground_grass.png") #using image modules
 bg_image = bg_image.resize((700, 700), Image.Resampling.LANCZOS)
 login_Image = ImageTk.PhotoImage(bg_image)
 
@@ -251,6 +273,8 @@ login_button.grid(row=8, column=0, columnspan=2, padx=40, pady=15, ipadx=15, ipa
 toggle_button = Button(frame, text="New to favimark? Register ...", command=toggle_mode, font=('Arial', 10), fg='blue', bg='white', bd=0)
 toggle_button.grid(row=9, column=0, columnspan=2, pady=10)
 
+###################################################################################################################################################
+
 #   FUNCTION TO DISPLAY DASHBOARD OF FAVIMARK
 #->CONTAINS 4 BUTTONS AND ONE INTERFACE BELOW IT
 #->MADE FULL SCREEN FOR BETTER UI
@@ -322,6 +346,9 @@ def dashboard():
     # Display the items in the dashboard (assuming this function works as intended)
     display_items(roots)
 
+###################################################################################################################################################
+###################################################################################################################################################
+
 #   FUNCTION TO DISPLAY ITEMS IN DASHBOARD
 #->CREATES AN INTERFACE TO DISPLAY ITEMS IN SHORT LISTS IF DOESNT EXIST
 #->OVERWRITES NEWER DATA FROM DATABASE TO DASHBOARD
@@ -375,6 +402,9 @@ def display_items(roots):
     # Automatically scroll to the bottom of the text widget
     text_widget.yview(END)
 
+###################################################################################################################################################
+###################################################################################################################################################
+
 #   FUNCTION TO ADD ITEMS TO DATABASE
 #->CREATES A NEW WINDOW FOR ADDING ITEMS TO DATABASE
 #->ASKS FOR ITEM NAME, TYPE AND DESCRIPTION
@@ -414,6 +444,8 @@ def add_item():
     newe3.pack()
     addnew=Button(additem,text=" ADD ",command=create, bg='grey', fg='white',bd=5)
     addnew.pack(pady=20)
+
+###################################################################################################################################################
 
 #   SUB-FUNCTION OF ADD ITEM FUNCTIONALITY
 #-> ADDS ITEMS TO THE DATABASE
@@ -476,6 +508,9 @@ def create():
     except sqlite3.Error as e:
         # Handle any errors during database interaction
         messagebox.showerror("Database Error", f"An error occurred: {e}")
+ 
+ ###################################################################################################################################################
+ ###################################################################################################################################################
     
 #   EDIT ITEMS IN FAVIMARK
 #-> THIS FUNCTION PROVIDES THE EDIT ITEM WINDOW PROMPT
@@ -503,6 +538,8 @@ def edit_prompt():
     edite1.pack()
     edit=Button(edit_prompt_window,text="PROCEED TO EDIT",command=edit_item,bg='grey', fg='white',bd=5)
     edit.pack(pady=10)
+
+###################################################################################################################################################
 
 #AFTER CLICKING ON PROCEED TO EDIT, THIS FUNCTION IS CALLED
 #->SIMILAR TO ADD ITEMS FUNCTION
@@ -578,6 +615,8 @@ def edit_item():
     finally:
         if conn:
             conn.close()
+     
+###################################################################################################################################################     
             
 #   AFTER EDITS ARE MADE AND SAVE BUTTON IS PRESSED THIS FUNCTION IS CALLED
 #->THIS FUNCTION USES SQL CODE TO MAKE CHANGES TO THE RESPECTIVE RECORD ACCORDINGLY
@@ -640,6 +679,9 @@ def update():
             messagebox.showerror('Input Error', 'Record ID must be a number!')
     except sqlite3.Error as e:
         messagebox.showerror('Database Error', f"An error occurred: {e}")
+
+###################################################################################################################################################
+###################################################################################################################################################
     
 #   DELETE RECORDS IN FAVIMARK
 #->FIRST A PROMPT APPEARS SIMILAR TO EDIT PROMPT 
@@ -669,6 +711,8 @@ def delete_prompt():
     dele1.pack()
     deletee=Button(delete_prompt_window,text=" DELETE ",command=delete_item, font=('Arial', 10), bg='red', fg='white',bd=5)
     deletee.pack(pady=10)
+    
+###################################################################################################################################################    
     
 #DELETE_ITEM FUNCTION IS USED TO DELETE THE RECORDS FROM THE DATABASE 
 #THEN DASHBOARD IS REFRESHED TO SHOW THAT THE RECORD HAS BEEN ERASED 
@@ -725,6 +769,8 @@ def delete_item():
         display_items(roots)  # Refresh the list of items after deletion
         delete_prompt_window.destroy()
 
+###################################################################################################################################################
+###################################################################################################################################################
 
 #SEARCH BUTTON'S FUNCTIONALITY
 #   SEARCH MARKED FAVOURITES IN FAVIMARK
@@ -757,6 +803,8 @@ def search_prompt():
     search_title_button=Button(search_what,text="Search by Type",command=search_by_type,bg='grey', fg='white',bd=3)
     search_title_button.pack()
    
+###################################################################################################################################################   
+   
 #THIS IS THE SEARCH BY ID PROMPT WHERE USER ENTERS ID OF RECORD THEY WANT TO VIEW
 #THEN REDIRECTED TO ANOTHER WINDOW
  
@@ -782,6 +830,8 @@ def search_by_id():
     idsearch_button = Button(searchbyid, text="Search", command=idsearch,bg='grey', fg='white',bd=3)
     idsearch_button.pack(pady=10)
     search_what.iconify()
+
+###################################################################################################################################################
 
 #THIS FUNCTION PROVIDES USER WITH ANOTHER WINDOW THAT RETRIEVES DATA FROM DATABASE
 #SQL IS USED TO RETRIEVE DATA AND DISPLAY IN THE NEW WINDOW
@@ -843,13 +893,7 @@ def idsearch():
     except NameError:
         pass 
 
-#   UPON CLICKING EXIT BUTTON, THIS FUNCTION CALLED
-#->CLOSES THREE WINDOWS OF SEARCH
-
-def idsearch_exit():
-        idsearch_window.destroy()
-        searchbyid.destroy()
-        search_what.destroy()
+###################################################################################################################################################
 
 #   UPON CLICKING EXIT BUTTON, THIS FUNCTION CALLED
 #->CLOSES THREE WINDOWS OF SEARCH
@@ -858,6 +902,8 @@ def idsearch_exit():
         idsearch_window.destroy()
         searchbyid.destroy()
         search_what.destroy()
+        
+###################################################################################################################################################        
 
 #SEARCH BY TYPE PROMPT
 #USER ENTERS THE TYPE OF ITEMS THEY WANT TO SEARCH FOR
@@ -887,6 +933,8 @@ def search_by_type():
     typesearch_button = Button(searchbytype, text="Search", command=typesearch,bg='grey', fg='white',bd=3)
     typesearch_button.pack(pady=10)
     search_what.iconify()
+
+###################################################################################################################################################
 
 #IMPLEMENTATION OF SQL TO SEARCH ALL RECORDS WITH THE GIVEN TYPE
 #THEN MULTIPLE RECORDS ARE SHOWN BASED OFF OF HOW MANY RECORDS HAVE SAME TYPE
@@ -957,6 +1005,8 @@ def typesearch():
     except NameError:
         pass  
 
+###################################################################################################################################################
+
 #UPON CLICKING EXIT BUTTON, THIS FUNCTION CALLED
 #->CLOSES THREE WINDOWS OF SEARCH
   
@@ -964,6 +1014,8 @@ def typesearch_exit():
     searchbytype.destroy()
     search_what.destroy()
     typesearch_window.destroy()
+
+###################################################################################################################################################
     
 def logout(): #imp
     global current_user_id
