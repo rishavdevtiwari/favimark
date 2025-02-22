@@ -34,11 +34,18 @@ def toggle_mode():
     if is_login:
         confirm_password_label.grid_remove()
         confirm_password_frame.grid_remove()
-        frame.place(relwidth=0.6, relheight=0.7)  # Resize frame for login
+        frame.place(relwidth=0.6, relheight=0.7)   # Resize frame for login
+        login_button.config(text="Login", image=LoginImage, compound='left', command=login)
+
+        
     else:
         confirm_password_label.grid()
         confirm_password_frame.grid()
         frame.place(relwidth=0.6, relheight=0.8)  # Resize frame for signup
+        login_button.config(text="Sign Up", image=SignUpImage, compound='left', command=register)
+        
+    # Update the frame's background image after resizing
+    update_frame_bg()
 
 def login():
     global current_user_id
@@ -54,8 +61,7 @@ def login():
 
         if user:
             current_user_id = user[0]
-            print(f"user {current_user_id} logged in") #Debugging Purposes
-            root.iconify() #imp
+            root.iconify()
             dashboard()
         else:
             response = messagebox.askyesno("User Not Found", "Username does not exist. Do you want to sign up?")
@@ -117,7 +123,7 @@ def register():
         conn.commit()
 
         messagebox.showinfo("Success", "Registration Successful! Please log in.")
-        toggle_mode() 
+        toggle_mode()  
 
     except sqlite3.IntegrityError:
         # Catch integrity errors like duplicate usernames
@@ -137,6 +143,15 @@ root.geometry('700x700')
 root.iconbitmap('login.ico')
 root.resizable(False, False)
 
+# Open and resize the background image to match the window dimensions
+bg_image = Image.open("bookbackground_grass.png")
+bg_image = bg_image.resize((700, 700), Image.Resampling.LANCZOS)
+login_Image = ImageTk.PhotoImage(bg_image)
+
+# Create and place the Label to cover the entire window
+login_background = Label(root, image=login_Image)
+login_background.place(x=0, y=0, relwidth=1, relheight=1)
+
 try:
     eye_open_img = Image.open("eye_open.png").resize((20, 20))  # Resize image
     eye_open_icon = ImageTk.PhotoImage(eye_open_img)
@@ -151,11 +166,37 @@ except Exception as e:
 frame = Frame(root, bg='white', highlightbackground='grey', highlightthickness=2)
 frame.place(relx=0.5, rely=0.5, anchor='center', relwidth=0.6, relheight=0.7)
 
+frame_width = int(0.6 * 700)
+frame_height = int(0.7 * 700)
+
+login_bg = Image.open("blue background.png") 
+login_bg = login_bg.resize((frame_width, frame_height), Image.Resampling.LANCZOS)
+login_bg_photo = ImageTk.PhotoImage(login_bg)
+
+bg_label = Label(frame, image=login_bg_photo)
+bg_label.image = login_bg_photo 
+bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+
 frame.grid_columnconfigure(0, weight=1)
+
+def update_frame_bg():
+    
+    frame.update_idletasks()
+    
+    frame_width = frame.winfo_width()
+    frame_height = frame.winfo_height()
+    
+    new_bg = Image.open("blue background.png") 
+     
+    new_bg = new_bg.resize((frame_width, frame_height), Image.Resampling.LANCZOS)
+    new_bg_photo = ImageTk.PhotoImage(new_bg)
+    bg_label.config(image=new_bg_photo)
+    bg_label.image = new_bg_photo  
 
 # Title
 title_label = Label(frame, text="LOG IN / SIGN IN", font=('Arial', 16, 'bold'), bg='white')
 title_label.grid(row=0, column=0, pady=15, columnspan=2)
+
 
 # Profile Image
 image = PhotoImage(file="profile.png").subsample(4, 4)
@@ -200,8 +241,10 @@ confirm_password_label.grid_remove()
 confirm_password_frame.grid_remove()
 
 # Login/Signup Button
+LoginImage = PhotoImage(file = "login image-50.png")
+SignUpImage = PhotoImage(file = "signup image.png")
 is_login = True
-login_button = Button(frame, text="Login", command=login, font=('Arial', 12), bg='grey', fg='white', bd=3)
+login_button = Button(frame, text="LOGIN", command=login, font=('Arial', 12), bg='grey', fg='white', bd=3, image = LoginImage, compound = 'left' )
 login_button.grid(row=8, column=0, columnspan=2, padx=40, pady=15, ipadx=15, ipady=5, sticky="ew")
 
 # Toggle Button
@@ -218,39 +261,59 @@ def dashboard():
     roots = Toplevel(root)
     roots.state('zoomed')
     roots.title("favimark/Dashboard")
+    
+    # Load and set the dashboard background image
+    dashboard_bg = Image.open("dashboard.png")  # Replace with your background file name
+    width = roots.winfo_screenwidth()
+    height = roots.winfo_screenheight()
+    dashboard_bg = dashboard_bg.resize((width, height), Image.Resampling.LANCZOS)
+    dashboard_bg_photo = ImageTk.PhotoImage(dashboard_bg)
+    
+    # Create a Label to hold the background image and place it so that it covers the entire dashboard
+    bg_label_dashboard = Label(roots, image=dashboard_bg_photo)
+    bg_label_dashboard.image = dashboard_bg_photo  # Keep a reference to avoid garbage collection
+    bg_label_dashboard.place(x=0, y=0, relwidth=1, relheight=1)
 
     # Align everything at the top of the page
-    top_frame = Frame(roots, bg='white')
+    top_frame = Frame(roots, bg='#f0f0f0')
     top_frame.pack(side=TOP, fill=BOTH, padx=1, pady=10, expand=True)
 
     # UI for buttons which aligns CRUD buttons at the top of the page using top_frame
-    button_frame_crud = Frame(top_frame, bg='white')
+    button_frame_crud = Frame(top_frame, bg='#f0f0f0')
     button_frame_crud.pack(side=LEFT, fill=X)  # Use fill=X to stretch horizontally
-
+    AddImage = PhotoImage(file = "addImage.png")
+    EditImage = PhotoImage(file = "editImage.png")
+    SearchImage = PhotoImage(file = "searchImage.png")   
+    DeleteImage = PhotoImage(file = "deleteImage.png")
+    
     # Use grid layout for buttons and align them to the left side
-    add_button = Button(button_frame_crud, text="ADD", command=add_item, font=('Arial', 12), bg='grey', fg='white', bd=3)
+    add_button = Button(button_frame_crud, text="ADD", command=add_item, font=('Arial', 12), bg='#f0f0f0', fg='black', bd=3, image = AddImage, compound = 'left' )
     add_button.grid(row=0, column=0, padx=10, sticky='w')  # Align left
+    add_button.image = AddImage  # Keep a persistent reference
 
-    edit_button = Button(button_frame_crud, text="EDIT", command=edit_prompt, font=('Arial', 12), bg='grey', fg='white', bd=3)
+    edit_button = Button(button_frame_crud, text="EDIT", command=edit_prompt, font=('Arial', 12), bg='#f0f0f0', fg='black', bd=3, image = EditImage, compound = 'left' )
     edit_button.grid(row=0, column=1, padx=10, sticky='w')  # Align left
+    edit_button.image = EditImage  # Keep a persistent reference
 
-    search_button = Button(button_frame_crud, text=" SEARCH ", command=search_prompt, font=('Arial', 12), bg='grey', fg='white', bd=3)
+    search_button = Button(button_frame_crud, text=" SEARCH ", command=search_prompt, font=('Arial', 12), bg='#f0f0f0', fg='black', bd=3, image = SearchImage, compound = 'left' )
     search_button.grid(row=0, column=2, padx=10, sticky='w')  # Align left
+    search_button.image = SearchImage  # Keep a persistent reference
 
-    delete_button = Button(button_frame_crud, text="DELETE", command=delete_prompt, font=('Arial', 12), bg='grey', fg='white', bd=3)
+    delete_button = Button(button_frame_crud, text="DELETE", command=delete_prompt, font=('Arial', 12), bg='#f0f0f0', fg='black', bd=3, image = DeleteImage, compound = 'left' )
     delete_button.grid(row=0, column=3, padx=10, sticky='w')  # Align left
+    delete_button.image = DeleteImage  # Keep a persistent reference
 
     # UI for exit button
-    button_frame_exit = Frame(top_frame, bg='white')
+    button_frame_exit = Frame(top_frame, bg='#f0f0f0')
     button_frame_exit.pack(side=RIGHT, fill=X, padx=10)  # This frame is only for the exit button
 
     # Load exit button image (exit.png should be in the same directory or specify the full path)
-    exit_image = Image.open('exit.png').resize((50, 50))  # Make sure exit.png is in the correct location
-    exit_icon = ImageTk.PhotoImage(exit_image)
+    exit_image = Image.open('exitImage.png').resize((50, 50))  # Make sure exit.png is in the correct location
+    ExitImage = ImageTk.PhotoImage(exit_image)
 
     # Create an Exit button with the image
-    exit_button = Button(button_frame_exit, image=exit_icon, command=logout, bd=0)
-    exit_button.image = exit_icon  # Keep a reference to the image to prevent garbage collection
+    exit_button = Button(button_frame_exit, text = 'EXIT', font=('Arial', 12, 'bold'), image=ExitImage, compound = 'left', command=roots.destroy, bd=3)
+    exit_button.image = ExitImage  # Keep a reference to the image to prevent garbage collection
 
     # Grid the exit button in the far-right position
     exit_button.grid(row=0, column=999, padx=10, sticky='e')  # column=999 will push it to the far-right
@@ -270,26 +333,30 @@ def display_items(roots):
         # Create frame and text widget with scrollbar as before
         item_frame = Frame(roots)
         item_frame.pack(fill=BOTH, expand=True)
+        
+        review_bg = Image.open("review_bg.png") 
+        review_bg = review_bg.resize((700, 500), Image.Resampling.LANCZOS)
+        review_bg_photo = ImageTk.PhotoImage(review_bg)
+        
+        bg_label_review = Label(item_frame, image=review_bg_photo)
+        bg_label_review.image = review_bg_photo 
+        bg_label_review.place(x=0, y=0, relwidth=1, relheight=1)
 
-        text_widget = Text(item_frame, wrap=WORD, width=100, height=50)
+        text_widget = Text(item_frame, wrap=WORD, width=100, height=50, bg = '#f0f0f0')
         text_widget.pack(side=LEFT, fill=BOTH, expand=True)
 
         scrollbar = Scrollbar(item_frame, orient=VERTICAL, command=text_widget.yview)
         scrollbar.pack(side=RIGHT, fill=Y)
         text_widget.config(yscrollcommand=scrollbar.set)
     else:
-        # Clear previous content in text widget
         text_widget.delete('1.0', END)
 
-    #user-specific data from the database
+    #user-specific data from database
     try:
         conn = sqlite3.connect('favimark.db')
         c = conn.cursor()
         c.execute("SELECT user_record_id, fav_name, fav_type, fav_description FROM favourites WHERE user_id=?", (current_user_id,))
         items = c.fetchall()
-        
-        print(f"fetching records for {current_user_id}") #Debugging purposes
-        print(f"Records fetched: {items}")  # Debugging Output
 
         if not items:
             text_widget.insert(END, "No items found for the current user.\n")
@@ -301,7 +368,6 @@ def display_items(roots):
         conn.close()
 
     except sqlite3.Error as e:
-        print("Database Error:",e) #debugging purposes
         # Handle database errors
         text_widget.insert(END, f"Error fetching data: {e}\n")
         conn.close()
@@ -323,6 +389,17 @@ def add_item():
     additem.geometry('400x400')
     additem.iconbitmap('add.ico')
     additem.title("favimark/ADD-ITEMS")
+    
+    bg = Image.open("add background.png")  # Replace with your background image file
+    bg = bg.resize((400, 400), Image.Resampling.LANCZOS)
+    bg_photo = ImageTk.PhotoImage(bg)
+    
+    # Create a Label for the background image and place it to fill the window
+    bg_label = Label(additem, image=bg_photo)
+    bg_label.image = bg_photo  # Keep a reference
+    bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+    
+    
     name_label=Label(additem,text="Mark your favourites",)
     name_label.pack(pady=10)
     newe1=Entry(additem,bd=5)
@@ -411,6 +488,15 @@ def edit_prompt():
     edit_prompt_window.title('Edit Prompt')
     edit_prompt_window.geometry('350x350')
     edit_prompt_window.iconbitmap('edit.ico')
+    
+    bg = Image.open("edit background.png")  # Use the same background image file
+    bg = bg.resize((350, 350), Image.Resampling.LANCZOS)
+    bg_photo = ImageTk.PhotoImage(bg)
+    bg_label = Label(edit_prompt_window, image=bg_photo)
+    bg_label.image = bg_photo  # Keep a reference
+    bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+    bg_label.lower()  # Ensure it's in the back
+    
     edit_text=Label(edit_prompt_window,text="Enter the ID of the records you want to edit.")
     edit_text.pack(pady=50)
     edite1=Entry(edit_prompt_window,bd=5)
@@ -437,6 +523,14 @@ def edit_item():
     edit_window.title('favimark/EDIT_ITEMS')
     edit_window.geometry('400x400')
     edit_window.iconbitmap('edit.ico')
+    
+    bg = Image.open("edit background.png")  # Replace with your background image file for editing
+    bg = bg.resize((400, 400), Image.Resampling.LANCZOS)
+    bg_photo = ImageTk.PhotoImage(bg)
+    bg_label = Label(edit_window, image=bg_photo)
+    bg_label.image = bg_photo  # Keep a reference to avoid garbage collection
+    bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+
 
     name_label = Label(edit_window, text="Edit your marked favourites")
     name_label.pack(pady=10)
@@ -506,7 +600,7 @@ def update():
                 messagebox.showwarning("Edit Error", "No record ID entered!")
                 return  
 
-            # Ensure all fields are filled before updating
+            # Ensure all fields are filled before updating - error handling
         if not neweditse1.get() or not neweditse2.get() or not neweditse3.get():
                 messagebox.showwarning("Edit Error", "Please do not leave fields empty!")
                 return  
@@ -515,10 +609,10 @@ def update():
             conn = sqlite3.connect('favimark.db')
             c = conn.cursor()
             
-            # Convert the ID to an integer (ensuring it's valid)
+            # Convert ID to an integer (ensuring it's valid)
             record_id = int(edite1.get().strip())
 
-            # Perform the update only if the record exists
+            # Perform update only if the record exists
             c.execute('''UPDATE favourites SET
                         fav_name = ?,
                         fav_type = ?,
@@ -560,6 +654,15 @@ def delete_prompt():
     delete_prompt_window.title('Delete Prompt')
     delete_prompt_window.geometry('350x350')
     delete_prompt_window.iconbitmap('delete.ico')
+    
+    bg = Image.open("delete background.png")  # Replace with your background image file
+    bg = bg.resize((350, 350), Image.Resampling.LANCZOS)
+    bg_photo = ImageTk.PhotoImage(bg)
+    bg_label = Label(delete_prompt_window, image=bg_photo)
+    bg_label.image = bg_photo  # Keep a reference to prevent garbage collection
+    bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+    bg_label.lower()  # Ensure the image is at the back of all other widgets
+    
     del_text=Label(delete_prompt_window,text="Enter the ID of the records you want to delete.")
     del_text.pack(pady=50)
     dele1=Entry(delete_prompt_window,bd=5)
@@ -622,6 +725,7 @@ def delete_item():
         display_items(roots)  # Refresh the list of items after deletion
         delete_prompt_window.destroy()
 
+
 #SEARCH BUTTON'S FUNCTIONALITY
 #   SEARCH MARKED FAVOURITES IN FAVIMARK
 #->PROMPT WINDOW APPEARS
@@ -635,6 +739,15 @@ def search_prompt():
     search_what.title('Search Prompt')
     search_what.geometry('350x350')
     search_what.iconbitmap('search.ico')
+    
+    bg = Image.open("search background.png")  # Replace with your background image file
+    bg = bg.resize((350, 350), Image.Resampling.LANCZOS)
+    bg_photo = ImageTk.PhotoImage(bg)
+    bg_label = Label(search_what, image=bg_photo)
+    bg_label.image = bg_photo  # Keep a reference to avoid garbage collection
+    bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+    bg_label.lower()  # Send the background to the back
+
     search_id_label=Label(search_what,text="Click below to search by ID")
     search_id_label.pack(pady=20)
     search_id_button=Button(search_what,text="Search by ID",command=search_by_id,bg='grey', fg='white',bd=3)
@@ -653,6 +766,15 @@ def search_by_id():
     searchbyid.iconbitmap('search.ico')
     searchbyid.title('Search by ID')
     searchbyid.geometry('400x400')
+    
+    bg = Image.open("search background.png")  # Use the same or different background image
+    bg = bg.resize((400, 400), Image.Resampling.LANCZOS)
+    bg_photo = ImageTk.PhotoImage(bg)
+    bg_label = Label(searchbyid, image=bg_photo)
+    bg_label.image = bg_photo
+    bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+    bg_label.lower()
+    
     idsearch_label = Label(searchbyid, text="Enter the ID of the record you want to search")
     idsearch_label.pack(pady=30)
     idsearch_entry = Entry(searchbyid,bd=5)
@@ -729,6 +851,14 @@ def idsearch_exit():
         searchbyid.destroy()
         search_what.destroy()
 
+#   UPON CLICKING EXIT BUTTON, THIS FUNCTION CALLED
+#->CLOSES THREE WINDOWS OF SEARCH
+
+def idsearch_exit():
+        idsearch_window.destroy()
+        searchbyid.destroy()
+        search_what.destroy()
+
 #SEARCH BY TYPE PROMPT
 #USER ENTERS THE TYPE OF ITEMS THEY WANT TO SEARCH FOR
 #FOR EXAMPLE: BOOK,MOVIE,ANIME,MANGA,MANHUA
@@ -741,6 +871,15 @@ def search_by_type():
     searchbytype.iconbitmap('search.ico')
     searchbytype.title('Search by Type')
     searchbytype.geometry('400x400')
+    
+    bg = Image.open("search background.png")  # Use the same or a different background image
+    bg = bg.resize((400, 400), Image.Resampling.LANCZOS)
+    bg_photo = ImageTk.PhotoImage(bg)
+    bg_label = Label(searchbytype, image=bg_photo)
+    bg_label.image = bg_photo
+    bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+    bg_label.lower()
+    
     typesearch_label = Label(searchbytype, text="Enter the Type of the record you want to search")
     typesearch_label.pack(pady=30)
     typesearch_entry = Entry(searchbytype,bd=5)
@@ -772,6 +911,14 @@ def typesearch():
     typesearch_window.title('Search Result')
     typesearch_window.geometry('700x500')
     typesearch_window.iconbitmap('search.ico')
+    
+    bg = Image.open("search background.png")  # Replace with your image file
+    bg = bg.resize((700, 500), Image.Resampling.LANCZOS)
+    bg_photo = ImageTk.PhotoImage(bg)
+    bg_label = Label(typesearch_window, image=bg_photo)
+    bg_label.image = bg_photo  # Keep reference
+    bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+    bg_label.lower()  # Send to back so other widgets appear on top  
 
     result_label = Label(typesearch_window, text="Search Result")
     result_label.pack(pady=10)
