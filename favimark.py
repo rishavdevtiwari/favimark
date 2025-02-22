@@ -28,6 +28,7 @@ def toggle_mode():
     toggle_button.config(text="New to favimark? Register ..." if is_login else "Already Registered? Sign In ...")
     username_entry.delete(0, END)
     password_entry.delete(0, END)
+    confirm_password_entry.delete(0,END)
     
     # Show/hide confirm password field dynamically
     if is_login:
@@ -53,6 +54,8 @@ def login():
 
         if user:
             current_user_id = user[0]
+            print(f"user {current_user_id} logged in") #Debugging Purposes
+            root.iconify() #imp
             dashboard()
         else:
             response = messagebox.askyesno("User Not Found", "Username does not exist. Do you want to sign up?")
@@ -99,11 +102,13 @@ def register():
                             password TEXT)''')
         
         cursor.execute('''CREATE TABLE IF NOT EXISTS favourites (
-                            user_id TEXT, 
-                            fav_name TEXT, 
-                            fav_type TEXT, 
-                            fav_description TEXT,
-                            FOREIGN KEY(user_id) REFERENCES users(user_id))''')
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT, 
+                    user_record_id INTEGER,  -- Unique record ID per user
+                    fav_name TEXT, 
+                    fav_type TEXT, 
+                    fav_description TEXT,
+                    FOREIGN KEY(user_id) REFERENCES users(user_id))''')
 
         # Insert user data into the users table
         cursor.execute("INSERT INTO users (user_id, username, password) VALUES (?, ?, ?)", 
@@ -112,7 +117,7 @@ def register():
         conn.commit()
 
         messagebox.showinfo("Success", "Registration Successful! Please log in.")
-        toggle_mode()  # Assuming this function is defined to switch to the login screen
+        toggle_mode() 
 
     except sqlite3.IntegrityError:
         # Catch integrity errors like duplicate usernames
@@ -121,7 +126,7 @@ def register():
         # Catch any other database-related errors
         messagebox.showerror("Database Error", f"An error occurred: {e}")
     finally:
-        # Ensure the connection is closed
+        # Ensure connection is closed
         conn.close()
 
 
@@ -132,7 +137,6 @@ root.geometry('700x700')
 root.iconbitmap('login.ico')
 root.resizable(False, False)
 
-# ✅ Use PIL to load and resize images properly
 try:
     eye_open_img = Image.open("eye_open.png").resize((20, 20))  # Resize image
     eye_open_icon = ImageTk.PhotoImage(eye_open_img)
@@ -245,7 +249,7 @@ def dashboard():
     exit_icon = ImageTk.PhotoImage(exit_image)
 
     # Create an Exit button with the image
-    exit_button = Button(button_frame_exit, image=exit_icon, command=roots.destroy, bd=0)
+    exit_button = Button(button_frame_exit, image=exit_icon, command=logout, bd=0)
     exit_button.image = exit_icon  # Keep a reference to the image to prevent garbage collection
 
     # Grid the exit button in the far-right position
@@ -277,23 +281,27 @@ def display_items(roots):
         # Clear previous content in text widget
         text_widget.delete('1.0', END)
 
-    # Fetch user-specific data from the database
+    #user-specific data from the database
     try:
         conn = sqlite3.connect('favimark.db')
         c = conn.cursor()
-        c.execute("SELECT fav_name, fav_type, fav_description FROM favourites WHERE user_id=?", (current_user_id,))
+        c.execute("SELECT user_record_id, fav_name, fav_type, fav_description FROM favourites WHERE user_id=?", (current_user_id,))
         items = c.fetchall()
+        
+        print(f"fetching records for {current_user_id}") #Debugging purposes
+        print(f"Records fetched: {items}")  # Debugging Output
 
         if not items:
             text_widget.insert(END, "No items found for the current user.\n")
         else:
             # Format and display the items
-            item_text = "".join(f"{i+1}. Name: {item[0]}\n   Type: {item[1]}\n   Description: {item[2]}\n\n" for i, item in enumerate(items))
+            item_text = "".join(f"{item[0]}. Name: {item[1]}\n   Type: {item[2]}\n   Description: {item[3]}\n\n" for i, item in enumerate(items))
             text_widget.insert(END, item_text)
 
         conn.close()
 
     except sqlite3.Error as e:
+        print("Database Error:",e) #debugging purposes
         # Handle database errors
         text_widget.insert(END, f"Error fetching data: {e}\n")
         conn.close()
@@ -335,10 +343,6 @@ def add_item():
 #-> THIS FUNCTION PROVIDES THE SUCCESFUL COMPLETION MESSAGE BOX.
 
 def create():
-    # Ensure 'current_user_id' is set globally when the user logs in
-    if not current_user_id:  # Make sure there is a logged-in user
-        messagebox.showwarning("Login Error", "No user is logged in!")
-        return
 
     # Check if any field is empty
     if not newe1.get() or not newe2.get() or not newe3.get():
@@ -354,6 +358,7 @@ def create():
         # Create table if it doesn't exist (already done earlier)
         c.execute('''
             CREATE TABLE IF NOT EXISTS favourites(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id TEXT,
                 fav_name TEXT,
                 fav_type TEXT,
@@ -362,9 +367,14 @@ def create():
             )
         ''')
 
-        # Insert new item into the table with the logged-in user's ID
-        c.execute('INSERT INTO favourites (user_id, fav_name, fav_type, fav_description) VALUES (?, ?, ?, ?)',
-                  (current_user_id, newe1.get(), newe2.get(), newe3.get()))
+        # Get the next record number for the user
+        c.execute("SELECT COALESCE(MAX(user_record_id), 0) + 1 FROM favourites WHERE user_id=?", (current_user_id,))
+        next_record_id = c.fetchone()[0]
+
+        # Insert new record with the user-specific record ID
+        c.execute('INSERT INTO favourites (user_id, user_record_id, fav_name, fav_type, fav_description) VALUES (?, ?, ?, ?, ?)',
+                (current_user_id, next_record_id, newe1.get(), newe2.get(), newe3.get()))
+
 
         # Commit the transaction and close the connection
         conn.commit()
@@ -417,11 +427,6 @@ def edit_prompt():
 def edit_item():
     global neweditse1, neweditse2, neweditse3, edite1, edit_prompt_window, edit_window
     
-    # Ensure 'current_user_id' is set globally when the user logs in
-    if not current_user_id:  # Make sure there is a logged-in user
-        messagebox.showwarning("Login Error", "No user is logged in!")
-        return
-    
     # Check if any field is empty
     if not edite1.get():
         messagebox.showwarning("Input Error", "Please enter ID of the record you want to edit.")
@@ -460,15 +465,16 @@ def edit_item():
         c = conn.cursor()
         oid = edite1.get()
         
-        # Fetch record by OID and ensure it belongs to the logged-in user
-        c.execute('SELECT * FROM favourites WHERE oid=? AND user_id=?', (oid, current_user_id))
+        print(f"Editing record ID: {oid} for user_id: {current_user_id}") #debugging purposes  # Debugging Output
+        c.execute('SELECT * FROM favourites WHERE user_record_id=? AND user_id=?', (oid, current_user_id))
         result = c.fetchall()
+        print(f"Record fetched: {result}")  # Debugging purposes
         
         if result:
             for i in result:
-                neweditse1.insert(0, i[1])  # Insert fav_name
-                neweditse2.insert(0, i[2])  # Insert fav_type
-                neweditse3.insert(0, i[3])  # Insert fav_description
+                neweditse1.insert(0, i[3])  # Insert fav_name
+                neweditse2.insert(0, i[4])  # Insert fav_type
+                neweditse3.insert(0, i[5])  # Insert fav_description
         else:
             messagebox.showerror('Error', 'Record not found or does not belong to the current user')
             edit_window.destroy()
@@ -486,11 +492,6 @@ def edit_item():
 def update():
     global neweditse1, neweditse2, neweditse3, edite1
     
-    # Ensure 'current_user_id' is set globally when the user logs in
-    if not current_user_id:  # Make sure there is a logged-in user
-        messagebox.showwarning("Login Error", "No user is logged in!")
-        return
-    
     # Check if any field is empty
     if not neweditse1.get() or not neweditse2.get() or not neweditse3.get():
         messagebox.showwarning("Edited Val Error", "Please do not leave edited values empty!")
@@ -499,39 +500,50 @@ def update():
     try:
         conn = sqlite3.connect('favimark.db')
         c = conn.cursor()
-        
-        # Update the record in the database, making sure it belongs to the logged-in user
-        c.execute('''UPDATE favourites SET
-                     fav_name = :a,
-                     fav_type = :b,
-                     fav_description = :c
-                     WHERE oid = :oid AND user_id = :user_id''',
-                  {
-                      "a": neweditse1.get(),
-                      "b": neweditse2.get(),
-                      "c": neweditse3.get(),
-                      "oid": edite1.get(),
-                      "user_id": current_user_id
-                  })
-        
-        conn.commit()
+            
+            # Ensure a valid record ID is entered
+        if not edite1.get():
+                messagebox.showwarning("Edit Error", "No record ID entered!")
+                return  
 
-        # Check if any rows were updated (this confirms the item belongs to the user and was updated)
-        if c.rowcount > 0:
-            messagebox.showinfo('Successful Edition', 'Item edited successfully')
-        else:
-            messagebox.showerror('Error', 'Failed to edit item. Make sure it belongs to the current user.')
+            # Ensure all fields are filled before updating
+        if not neweditse1.get() or not neweditse2.get() or not neweditse3.get():
+                messagebox.showwarning("Edit Error", "Please do not leave fields empty!")
+                return  
 
-        conn.close()
+        try:
+            conn = sqlite3.connect('favimark.db')
+            c = conn.cursor()
+            
+            # Convert the ID to an integer (ensuring it's valid)
+            record_id = int(edite1.get().strip())
 
-        # Refresh the displayed items
-        display_items(roots)
+            # Perform the update only if the record exists
+            c.execute('''UPDATE favourites SET
+                        fav_name = ?,
+                        fav_type = ?,
+                        fav_description = ?
+                        WHERE user_record_id = ? AND user_id = ?''',
+                    (neweditse1.get(), neweditse2.get(), neweditse3.get(), record_id, current_user_id))
+            
+            conn.commit()
 
-        # Clear the input fields and close the edit window
-        edite1.delete(0, END)
-        edit_window.destroy()
-        edit_prompt_window.destroy()
+            if c.rowcount > 0:  # Check if any row was actually updated
+                messagebox.showinfo('Success', 'Item updated successfully!')
+            else:
+                messagebox.showerror('Error', 'No matching record found!')
 
+            conn.close()
+
+            # Refresh the displayed items
+            display_items(roots)
+
+            # Close edit window
+            edit_window.destroy()
+            edit_prompt_window.destroy()
+
+        except ValueError:
+            messagebox.showerror('Input Error', 'Record ID must be a number!')
     except sqlite3.Error as e:
         messagebox.showerror('Database Error', f"An error occurred: {e}")
     
@@ -559,15 +571,12 @@ def delete_prompt():
 #THEN DASHBOARD IS REFRESHED TO SHOW THAT THE RECORD HAS BEEN ERASED 
 
 def delete_item():
-    # Ensure 'current_user_id' is set globally when the user logs in
-    if not current_user_id:  # Make sure there is a logged-in user
-        messagebox.showwarning("Login Error", "No user is logged in!")
-        return
+    global current_user_id  # Ensure 'current_user_id' is set globally when the user logs in
     
     # Check if any field is empty
     if not dele1.get():
         messagebox.showwarning("Records Input Error", "Please enter the ID of the record you want to delete.")
-        return  # Do not proceed if no ID is entered
+        return  
     
     conn = sqlite3.connect('favimark.db')
     c = conn.cursor()
@@ -576,33 +585,32 @@ def delete_item():
     # Ask for confirmation before deleting
     confirm = messagebox.askyesno("Confirm Deletion", f"Are you sure you want to delete record ID {oid}?")
     if not confirm:
-        return  # If user selects "No", exit function without deleting
+        return  
     
     try:
-        # Check if the record belongs to the logged-in user
-        c.execute('SELECT * FROM favourites WHERE oid=? AND user_id=?', (oid, current_user_id))
-        result = c.fetchall()
-        
-        if not result:
+        # Step 1: Check if the record belongs to the logged-in user
+        c.execute('SELECT id FROM favourites WHERE user_record_id=? AND user_id=?', (oid, current_user_id))
+        record = c.fetchone()
+
+        if not record:
             messagebox.showwarning("Deletion Error", f"Record ID {oid} does not belong to the current user.")
-            return  # Exit if the record doesn't belong to the logged-in user
+            return  
         
-        # If the record belongs to the user, delete it
-        c.execute('DELETE FROM favourites WHERE oid=? AND user_id=?', (oid, current_user_id))
+        print(f"Deleting {oid} for user {current_user_id}")  # Debugging
+
+        # Step 2: Delete the record
+        c.execute('DELETE FROM favourites WHERE user_record_id=? AND user_id=?', (oid, current_user_id))
         conn.commit()
 
-        # Check if any row was actually deleted
-        if c.rowcount == 0:
-            messagebox.showwarning("Deletion Error", f"Record with ID {oid} does not exist.")
-            return  # Exit if the record doesn't exist
-        
-        # Update OID of remaining items (adjust the IDs after deletion)
-        c.execute('SELECT oid FROM favourites WHERE oid>? AND user_id=?', (oid, current_user_id))
-        remaining_items = c.fetchall()
-        for item in remaining_items:
-            new_oid = item[0] - 1  # Decrement OID by 1 to update the record
-            c.execute('UPDATE favourites SET oid=? WHERE oid=? AND user_id=?', (new_oid, item[0], current_user_id))
-            conn.commit()
+        # Step 3: Fetch and renumber remaining records for the user
+        c.execute("SELECT id FROM favourites WHERE user_id = ? ORDER BY user_record_id", (current_user_id,))
+        records = c.fetchall()
+
+        # Step 4: Update user_record_id sequentially
+        for index, (record_id,) in enumerate(records, start=1):
+            c.execute("UPDATE favourites SET user_record_id = ? WHERE id = ?", (index, record_id))
+
+        conn.commit()
 
         messagebox.showinfo('Successful Deletion', 'Item deleted successfully')
 
@@ -613,7 +621,6 @@ def delete_item():
         conn.close()
         display_items(roots)  # Refresh the list of items after deletion
         delete_prompt_window.destroy()
-
 
 #SEARCH BUTTON'S FUNCTIONALITY
 #   SEARCH MARKED FAVOURITES IN FAVIMARK
@@ -692,7 +699,7 @@ def idsearch():
         # Retrieve the record by ID for the current user
         conn = sqlite3.connect('favimark.db')
         c = conn.cursor()
-        c.execute('SELECT fav_name, fav_type, fav_description FROM favourites WHERE rowid=? AND user_id=?', (id, current_user_id))
+        c.execute('SELECT fav_name, fav_type, fav_description FROM favourites WHERE user_record_id=? AND user_id=?', (id, current_user_id))
         record = c.fetchone()
         conn.close()
 
@@ -709,13 +716,10 @@ def idsearch():
         
     except sqlite3.Error as e:
         messagebox.showerror("Error", str(e))
-    
-    # Iconify the search window (this line seems to be related to a global `searchbyid` window, but it can be used conditionally)
-    # If `searchbyid` is a valid window, you can use this, else it can be removed if not defined.
     try:
         searchbyid.iconify()
     except NameError:
-        pass  # If searchbyid is not defined, no action is taken
+        pass 
 
 #   UPON CLICKING EXIT BUTTON, THIS FUNCTION CALLED
 #->CLOSES THREE WINDOWS OF SEARCH
@@ -801,11 +805,10 @@ def typesearch():
     except sqlite3.Error as e:
         messagebox.showerror("Error", str(e))
     
-    # Iconify the search window
     try:
         searchbytype.iconify()
     except NameError:
-        pass  # If searchbytype is not defined, no action is taken
+        pass  
 
 #UPON CLICKING EXIT BUTTON, THIS FUNCTION CALLED
 #->CLOSES THREE WINDOWS OF SEARCH
@@ -815,10 +818,12 @@ def typesearch_exit():
     search_what.destroy()
     typesearch_window.destroy()
     
-def logout():
+def logout(): #imp
     global current_user_id
-    current_user_id = None  # Reset current user
-    dashboard.destroy()  # Close the dashboard window
-    print("User logged out successfully.")
+    exit=messagebox.askyesno('Logout_prompt','Do you want to logout?')
+    if exit:
+        current_user_id = None  # Reset current user
+        roots.destroy()  # Close the dashboard window
+        root.deiconify()
     
 mainloop()
