@@ -270,7 +270,7 @@ login_button = Button(frame, text="LOGIN", command=login, font=('Arial', 12), bg
 login_button.grid(row=8, column=0, columnspan=2, padx=40, pady=15, ipadx=15, ipady=5, sticky="ew")
 
 # Toggle Button
-toggle_button = Button(frame, text="New to favimark? Register ...", command=toggle_mode, font=('Arial', 10), fg='blue', bg='white', bd=0)
+toggle_button = Button(frame, text="New to favimark? Register ...", command=toggle_mode, font=('Arial', 10), fg='blue', bg='white', bd=3)
 toggle_button.grid(row=9, column=0, columnspan=2, pady=10)
 
 ###################################################################################################################################################
@@ -336,7 +336,7 @@ def dashboard():
     ExitImage = ImageTk.PhotoImage(exit_image)
 
     # Create an Exit button with the image
-    exit_button = Button(button_frame_exit, text = 'EXIT', font=('Arial', 12, 'bold'), image=ExitImage, compound = 'left', command=roots.destroy, bd=3)
+    exit_button = Button(button_frame_exit, text = 'EXIT', font=('Arial', 12, 'bold'), image=ExitImage, compound = 'left', command=logout, bd=3)
     exit_button.image = ExitImage  # Keep a reference to the image to prevent garbage collection
 
     # Grid the exit button in the far-right position
@@ -751,11 +751,20 @@ def delete_item():
 
         # Step 3: Fetch and renumber remaining records for the user
         c.execute("SELECT id FROM favourites WHERE user_id = ? ORDER BY user_record_id", (current_user_id,))
-        records = c.fetchall()
+        userrecordidrecords = c.fetchall()
 
-        # Step 4: Update user_record_id sequentially
-        for index, (record_id,) in enumerate(records, start=1):
+        # Step 4.1: Update user_record_id sequentially
+        for index, (record_id,) in enumerate(userrecordidrecords, start=1):
             c.execute("UPDATE favourites SET user_record_id = ? WHERE id = ?", (index, record_id))
+
+        conn.commit()
+        
+        c.execute("SELECT id FROM favourites ORDER BY id")
+        idrecords = c.fetchall()
+        
+        # Step 4.2: Renumber the `id` values sequentially
+        for index, (old_id,) in enumerate(idrecords, start=1):
+            c.execute("UPDATE favourites SET id = ? WHERE id = ?", (index, old_id))
 
         conn.commit()
 
